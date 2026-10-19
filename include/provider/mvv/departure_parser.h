@@ -6,7 +6,7 @@
 #include <ctime>
 #include <string>
 
-#include "departure_provider.h"
+#include "provider/departure_provider.h"
 
 inline FetchResult toDepartureBoard(JsonObjectConst root, time_t now) {
   const char* error = root["error"] | "";

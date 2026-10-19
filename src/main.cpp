@@ -8,11 +8,11 @@
 #include <utility>
 #include <variant>
 
-#include "board_selection.h"
-#include "board_view.h"
+#include "board/board_selection.h"
 #include "config.h"
-#include "epaper_board_view.h"
-#include "mvv_departure_provider.h"
+#include "provider/mvv/departure_provider.h"
+#include "view/board_view.h"
+#include "view/epaper_board_view.h"
 
 namespace {
 EpaperBoardView::Display display(GxEPD2_290_T94_V2(PIN_CS, PIN_DC, PIN_RST, PIN_BUSY));

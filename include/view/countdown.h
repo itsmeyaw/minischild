@@ -3,7 +3,7 @@
 #include <ctime>
 #include <string>
 
-#include "departure_board.h"
+#include "model/departure_board.h"
 
 inline time_t departureTime(const Departure& d) {
   return d.departure ? d.departure->time : d.scheduledDepartureTime;

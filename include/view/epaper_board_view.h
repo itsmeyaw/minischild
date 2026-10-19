@@ -6,7 +6,7 @@
 #include <functional>
 #include <string>
 
-#include "board_view.h"
+#include "view/board_view.h"
 
 class EpaperBoardView : public BoardView {
  public:

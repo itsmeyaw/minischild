@@ -1,4 +1,4 @@
-#include "mvv_departure_provider.h"
+#include "provider/mvv/departure_provider.h"
 
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
@@ -8,8 +8,8 @@
 #include <utility>
 #include <vector>
 
-#include "mvv_departure_parser.h"
-#include "mvv_departures_url.h"
+#include "provider/mvv/departure_parser.h"
+#include "provider/mvv/departures_url.h"
 
 namespace {
 // USERTrust RSA root; anchors www.mvv-muenchen.de's Sectigo chain. Expires 2038-01-18.

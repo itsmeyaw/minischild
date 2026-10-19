@@ -5,8 +5,8 @@
 #include <ctime>
 #include <vector>
 
-#include "countdown.h"
-#include "departure_board.h"
+#include "model/departure_board.h"
+#include "view/countdown.h"
 
 constexpr size_t kBoardSize = 5;
 

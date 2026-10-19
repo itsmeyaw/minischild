@@ -3,7 +3,7 @@
 #include <string>
 #include <variant>
 
-#include "departure_board.h"
+#include "model/departure_board.h"
 
 struct FetchError {
   std::string message;

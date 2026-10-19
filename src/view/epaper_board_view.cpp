@@ -1,10 +1,10 @@
-#include "epaper_board_view.h"
+#include "view/epaper_board_view.h"
 
 #include <ctime>
 #include <string>
 
-#include "countdown.h"
-#include "truncate.h"
+#include "util/truncate.h"
+#include "view/countdown.h"
 
 namespace {
 constexpr int kWidth = 296;

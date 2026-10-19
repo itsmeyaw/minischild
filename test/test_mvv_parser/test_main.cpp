@@ -5,9 +5,9 @@
 #include <ctime>
 #include <string>
 
-#include "departure_board.h"
 #include "fixture.h"
-#include "mvv_departure_parser.h"
+#include "model/departure_board.h"
+#include "provider/mvv/departure_parser.h"
 
 // 2026-10-19 23:29:21 CEST, when the fixture was captured
 static const time_t NOW = 1792445361;

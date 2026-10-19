@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "mvv_departures_url.h"
+#include "provider/mvv/departures_url.h"
 
 // 2026-10-19 12:00:00 UTC
 static const time_t NOON = 1792411200;

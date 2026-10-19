@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "departure_provider.h"
+#include "provider/departure_provider.h"
 
 class MvvDepartureProvider : public DepartureProvider {
  public:
