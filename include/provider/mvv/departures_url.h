@@ -55,3 +55,9 @@ inline std::string mvvDeparturesUrl(const std::string& stationId,
          "&requested_timestamp=" + std::to_string(requestedTimestamp) +
          "&lines=" + mvv_url_detail::percentEncode(mvv_url_detail::base64(lines));
 }
+
+// URL of the MVV website's endpoint listing the Route Directions of a Station.
+inline std::string mvvAvailableLinesUrl(const std::string& stationId) {
+  return "https://www.mvv-muenchen.de/?eID=departuresFinder&action=available_lines&stop_id=" +
+         mvv_url_detail::percentEncode(stationId);
+}

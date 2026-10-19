@@ -52,11 +52,19 @@ void test_percent_encodes_base64_plus() {
       url.c_str());
 }
 
+void test_builds_the_available_lines_url_for_a_station() {
+  TEST_ASSERT_EQUAL_STRING(
+      "https://www.mvv-muenchen.de/"
+      "?eID=departuresFinder&action=available_lines&stop_id=de%3A09162%3A2",
+      mvvAvailableLinesUrl("de:09162:2").c_str());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_builds_the_url_for_two_route_directions);
   RUN_TEST(test_builds_the_url_for_a_single_route_direction);
   RUN_TEST(test_pads_base64_with_a_single_equals_sign);
   RUN_TEST(test_percent_encodes_base64_plus);
+  RUN_TEST(test_builds_the_available_lines_url_for_a_station);
   return UNITY_END();
 }
