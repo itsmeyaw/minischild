@@ -1,42 +1,67 @@
 #include <Arduino.h>
 #include <GxEPD2_BW.h>
 #include <SPI.h>
+#include <WiFi.h>
 
-#include <cstdlib>
 #include <ctime>
+#include <iterator>
+#include <utility>
+#include <variant>
 
+#include "board_selection.h"
 #include "board_view.h"
 #include "config.h"
 #include "epaper_board_view.h"
+#include "mvv_departure_provider.h"
 
 namespace {
 EpaperBoardView::Display display(GxEPD2_290_T94_V2(PIN_CS, PIN_DC, PIN_RST, PIN_BUSY));
 EpaperBoardView epaperView(display);
+MvvDepartureProvider mvvProvider(STATION_ID,
+                                 {std::begin(ROUTE_DIRECTION_IDS), std::end(ROUTE_DIRECTION_IDS)});
+
+bool connectWifi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  const unsigned long deadline = millis() + 20000;
+  while (WiFi.status() != WL_CONNECTED) {
+    if (millis() > deadline) return false;
+    delay(250);
+  }
+  return true;
+}
+
+bool syncClock() {
+  configTzTime("CET-1CEST,M3.5.0,M10.5.0/3", "pool.ntp.org", "time.nist.gov");
+  tm t;
+  return getLocalTime(&t, 10000);
+}
 }  // namespace
 
 void setup() {
-  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-  tzset();
-
-  const time_t now = 1792411200;  // 2026-10-19 12:00:00 UTC
-
-  DepartureBoard board;
-  board.stopName = "Münchner Freiheit";
-  board.timestamp = now;
-  board.departures = {
-      {"U6", "Garching-Forschungszentrum", "", now + 4 * 60, ScheduleRelationship::Scheduled,
-       std::nullopt},
-      {"U6", "Großhadern", "", now + 9 * 60, ScheduleRelationship::Scheduled,
-       StopTimeEvent{now + 12 * 60, 180}},
-      {"19", "Fürstenried West", "", now, ScheduleRelationship::Scheduled, std::nullopt},
-      {"U1", "Mangfallplatz", "", now + 14 * 60, ScheduleRelationship::NoData, std::nullopt},
-  };
-
+  Serial.begin(115200);
   SPI.begin(PIN_CLK, -1, PIN_DIN, PIN_CS);
   epaperView.begin();
 
   BoardView& view = epaperView;
-  view.render(board, now);
+  DepartureProvider& provider = mvvProvider;
+  if (!connectWifi() || !syncClock()) {
+    Serial.println("WiFi or clock sync failed");
+    view.renderNoConnection(time(nullptr));
+    return;
+  }
+
+  FetchResult result = provider.fetch();
+  if (auto* error = std::get_if<FetchError>(&result)) {
+    Serial.println(error->message.c_str());
+    view.renderNoConnection(time(nullptr));
+    return;
+  }
+  if (auto* board = std::get_if<DepartureBoard>(&result)) {
+    const time_t now = time(nullptr);
+    board->departures = selectDepartures(std::move(board->departures), now);
+    view.render(*board, now);
+  }
 }
 
 void loop() {}
