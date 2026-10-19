@@ -69,6 +69,18 @@ void test_delay_across_midnight_lands_on_next_day() {
   TEST_ASSERT_EQUAL(240, d.departure->delay);
 }
 
+void test_early_departure_across_midnight_lands_on_previous_day() {
+  DepartureBoard board = boardFrom(parseMvvDepartures(
+      R"({"error":"","departures":[{"line":{"number":"S1"},"direction":"Freising",)"
+      R"("station":{"name":"Marienplatz"},"track":"2","departureDate":"20261020",)"
+      R"("departurePlanned":"00:03","departureLive":"23:58"}]})",
+      NOW));
+  const Departure& d = board.departures[0];
+  TEST_ASSERT_EQUAL(1792447380, d.scheduledDepartureTime);
+  TEST_ASSERT_EQUAL(1792447080, d.departure->time);
+  TEST_ASSERT_EQUAL(-300, d.departure->delay);
+}
+
 void test_empty_live_time_is_no_data_without_event() {
   DepartureBoard board = boardFrom(parseMvvDepartures(kMvvFixture, NOW));
   const Departure& d = board.departures[4];
@@ -103,6 +115,7 @@ int main() {
   RUN_TEST(test_delayed_departure_has_predicted_time_and_positive_delay);
   RUN_TEST(test_departure_after_midnight_uses_departure_date);
   RUN_TEST(test_delay_across_midnight_lands_on_next_day);
+  RUN_TEST(test_early_departure_across_midnight_lands_on_previous_day);
   RUN_TEST(test_empty_live_time_is_no_data_without_event);
   RUN_TEST(test_error_field_is_a_fetch_error);
   RUN_TEST(test_malformed_json_is_a_fetch_error);
