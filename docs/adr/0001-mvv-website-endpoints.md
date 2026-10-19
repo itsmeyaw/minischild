@@ -1,0 +1,3 @@
+# Use the MVV website's undocumented departure endpoints
+
+Departures come from the `eID=departuresFinder` endpoints on `www.mvv-muenchen.de` (as used by the ikuyo project in `../transitiq`), not from an official API. The official EFA interface is not openly available and the GTFS / GTFS-RT feeds are far too large for an ESP32 without PSRAM, while the website endpoints return a ~15 KB JSON document per Station that can be stream-parsed. The cost is that MVV may change or remove these endpoints without notice (the `eID=stopFinder` search already broke), so all knowledge of them is confined to the MVV departure provider behind the `DepartureProvider` interface, and the Station is configured by ID rather than searched on the device.
