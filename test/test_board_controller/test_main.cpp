@@ -94,7 +94,7 @@ void test_first_tick_fetches_and_renders_fresh_board_fully() {
   TEST_ASSERT_EQUAL(Refresh::Full, view.lastRefresh);
 }
 
-void test_tick_within_interval_neither_fetches_nor_renders() {
+void test_tick_within_the_same_minute_neither_fetches_nor_renders() {
   provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
   BoardController controller(provider, view, clock_);
   controller.tick();
@@ -106,7 +106,7 @@ void test_tick_within_interval_neither_fetches_nor_renders() {
   TEST_ASSERT_EQUAL(1, view.renders);
 }
 
-void test_tick_after_interval_fetches_and_renders_partially() {
+void test_tick_in_the_next_minute_fetches_and_renders_partially() {
   provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
   BoardController controller(provider, view, clock_);
   controller.tick();
@@ -119,13 +119,28 @@ void test_tick_after_interval_fetches_and_renders_partially() {
   TEST_ASSERT_EQUAL(Refresh::Partial, view.lastRefresh);
 }
 
+void test_refresh_lands_on_the_next_full_minute_not_sixty_seconds_later() {
+  provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
+  clock_.current = NOON + 45;
+  BoardController controller(provider, view, clock_);
+  controller.tick();
+
+  clock_.current = NOON + 59;
+  controller.tick();
+  TEST_ASSERT_EQUAL(1, provider.fetches);
+
+  clock_.current = NOON + 60;
+  controller.tick();
+  TEST_ASSERT_EQUAL(2, provider.fetches);
+}
+
 void test_full_refresh_on_first_and_every_thirtieth_render() {
   provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
   BoardController controller(provider, view, clock_);
 
   for (int i = 0; i < 31; i++) {
     controller.tick();
-    clock_.current += kFetchInterval;
+    clock_.current += 60;
   }
 
   TEST_ASSERT_EQUAL(31, view.renders);
@@ -259,8 +274,9 @@ void test_failure_after_clock_jumped_before_last_good_fetch_renders_no_connectio
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_first_tick_fetches_and_renders_fresh_board_fully);
-  RUN_TEST(test_tick_within_interval_neither_fetches_nor_renders);
-  RUN_TEST(test_tick_after_interval_fetches_and_renders_partially);
+  RUN_TEST(test_tick_within_the_same_minute_neither_fetches_nor_renders);
+  RUN_TEST(test_tick_in_the_next_minute_fetches_and_renders_partially);
+  RUN_TEST(test_refresh_lands_on_the_next_full_minute_not_sixty_seconds_later);
   RUN_TEST(test_full_refresh_on_first_and_every_thirtieth_render);
   RUN_TEST(test_failed_fetch_renders_last_good_board_as_stale);
   RUN_TEST(test_last_good_board_exactly_ten_minutes_old_is_still_stale);

@@ -10,7 +10,6 @@
 #include "provider/departure_provider.h"
 #include "view/board_view.h"
 
-constexpr time_t kFetchInterval = 60;    // seconds between fetches
 constexpr time_t kStaleLimit = 10 * 60;  // last good board older than this → No connection
 constexpr int kFullRefreshEvery = 30;    // every 30th render is Refresh::Full
 
@@ -19,11 +18,11 @@ class BoardController {
   BoardController(DepartureProvider& provider, BoardView& view, Clock& clock)
       : provider_(provider), view_(view), clock_(clock) {}
 
-  // Fetches and renders once kFetchInterval has passed since the last fetch; call from loop().
+  // Fetches and renders on the first tick of each minute (hh:mm:00); call from loop().
   // Returns the fetch error, if this tick fetched and the fetch failed, so the caller can log it.
   std::optional<FetchError> tick() {
     const time_t now = clock_.now();
-    if (lastFetchAt_ && now >= *lastFetchAt_ && now - *lastFetchAt_ < kFetchInterval) {
+    if (lastFetchAt_ && now / 60 == *lastFetchAt_ / 60) {
       return std::nullopt;
     }
     lastFetchAt_ = now;
