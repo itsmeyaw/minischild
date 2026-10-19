@@ -12,11 +12,11 @@
 #include "config.h"
 #include "provider/mvv/departure_provider.h"
 #include "view/board_view.h"
-#include "view/epaper_board_view.h"
+#include "view/epaper_290/epaper_290_board_view.h"
 
 namespace {
-EpaperBoardView::Display display(GxEPD2_290_T94_V2(PIN_CS, PIN_DC, PIN_RST, PIN_BUSY));
-EpaperBoardView epaperView(display);
+Epaper290BoardView::Display display(GxEPD2_290_T94_V2(PIN_CS, PIN_DC, PIN_RST, PIN_BUSY));
+Epaper290BoardView epaperView(display);
 MvvDepartureProvider mvvProvider(STATION_ID,
                                  {std::begin(ROUTE_DIRECTION_IDS), std::end(ROUTE_DIRECTION_IDS)});
 

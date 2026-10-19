@@ -1,4 +1,4 @@
-#include "view/epaper_board_view.h"
+#include "view/epaper_290/epaper_290_board_view.h"
 
 #include <ctime>
 #include <string>
@@ -21,9 +21,9 @@ constexpr int kDelayRight = 228;
 constexpr int kMessageBaseline = kFirstRowBaseline + 2 * kRowHeight;
 }  // namespace
 
-EpaperBoardView::EpaperBoardView(Display& display) : display_(display) {}
+Epaper290BoardView::Epaper290BoardView(Display& display) : display_(display) {}
 
-void EpaperBoardView::begin() {
+void Epaper290BoardView::begin() {
   display_.init(115200);
   display_.setRotation(1);
   u8g2_.begin(display_);
@@ -32,7 +32,7 @@ void EpaperBoardView::begin() {
   u8g2_.setForegroundColor(GxEPD_BLACK);
 }
 
-void EpaperBoardView::render(const DepartureBoard& board, time_t now) {
+void Epaper290BoardView::render(const DepartureBoard& board, time_t now) {
   paint([&] {
     drawHeader(board.stopName, now);
     if (board.departures.empty()) {
@@ -47,14 +47,14 @@ void EpaperBoardView::render(const DepartureBoard& board, time_t now) {
   });
 }
 
-void EpaperBoardView::renderNoConnection(time_t now) {
+void Epaper290BoardView::renderNoConnection(time_t now) {
   paint([&] {
     drawHeader("", now);
     drawCentered(kMessageBaseline, "No connection");
   });
 }
 
-void EpaperBoardView::paint(const std::function<void()>& drawContent) {
+void Epaper290BoardView::paint(const std::function<void()>& drawContent) {
   display_.setFullWindow();
   display_.firstPage();
   do {
@@ -64,7 +64,7 @@ void EpaperBoardView::paint(const std::function<void()>& drawContent) {
   display_.hibernate();
 }
 
-void EpaperBoardView::drawHeader(const std::string& stopName, time_t now) {
+void Epaper290BoardView::drawHeader(const std::string& stopName, time_t now) {
   tm local;
   localtime_r(&now, &local);
   char clock[6];
@@ -77,7 +77,7 @@ void EpaperBoardView::drawHeader(const std::string& stopName, time_t now) {
   display_.drawFastHLine(0, kRuleY, kWidth, GxEPD_BLACK);
 }
 
-void EpaperBoardView::drawRow(int row, const Departure& departure, time_t now) {
+void Epaper290BoardView::drawRow(int row, const Departure& departure, time_t now) {
   const int baseline = kFirstRowBaseline + row * kRowHeight;
   u8g2_.drawUTF8(kMargin, baseline, departure.routeShortName.c_str());
   u8g2_.drawUTF8(kHeadsignX, baseline, fitToWidth(departure.tripHeadsign, kHeadsignWidth).c_str());
@@ -88,16 +88,18 @@ void EpaperBoardView::drawRow(int row, const Departure& departure, time_t now) {
   }
 }
 
-void EpaperBoardView::drawCentered(int baseline, const std::string& text) {
+void Epaper290BoardView::drawCentered(int baseline, const std::string& text) {
   u8g2_.drawUTF8((kWidth - textWidth(text)) / 2, baseline, text.c_str());
 }
 
-void EpaperBoardView::drawRight(int right, int baseline, const std::string& text) {
+void Epaper290BoardView::drawRight(int right, int baseline, const std::string& text) {
   u8g2_.drawUTF8(right - textWidth(text), baseline, text.c_str());
 }
 
-std::string EpaperBoardView::fitToWidth(const std::string& text, int maxWidth) {
+std::string Epaper290BoardView::fitToWidth(const std::string& text, int maxWidth) {
   return truncateToWidth(text, maxWidth, [this](const std::string& s) { return textWidth(s); });
 }
 
-int EpaperBoardView::textWidth(const std::string& text) { return u8g2_.getUTF8Width(text.c_str()); }
+int Epaper290BoardView::textWidth(const std::string& text) {
+  return u8g2_.getUTF8Width(text.c_str());
+}

@@ -8,11 +8,12 @@
 
 #include "view/board_view.h"
 
-class EpaperBoardView : public BoardView {
+// Waveshare 2.9" V2 e-paper (GxEPD2_290_T94_V2), landscape 296x128.
+class Epaper290BoardView : public BoardView {
  public:
   using Display = GxEPD2_BW<GxEPD2_290_T94_V2, GxEPD2_290_T94_V2::HEIGHT>;
 
-  explicit EpaperBoardView(Display& display);
+  explicit Epaper290BoardView(Display& display);
 
   void begin();
   void render(const DepartureBoard& board, time_t now) override;
