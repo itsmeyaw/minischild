@@ -19,6 +19,14 @@ constexpr int kHeadsignX = 48;
 constexpr int kHeadsignWidth = 150;
 constexpr int kDelayRight = 228;
 constexpr int kMessageBaseline = kFirstRowBaseline + 2 * kRowHeight;
+
+std::string clockText(time_t t) {
+  tm local;
+  localtime_r(&t, &local);
+  char text[6];
+  strftime(text, sizeof text, "%H:%M", &local);
+  return text;
+}
 }  // namespace
 
 Epaper290BoardView::Epaper290BoardView(Display& display) : display_(display) {}
@@ -29,12 +37,12 @@ void Epaper290BoardView::begin() {
   u8g2_.begin(display_);
   u8g2_.setFont(u8g2_font_calibration_gothic_nbp_t_all);
   u8g2_.setFontMode(1);
-  u8g2_.setForegroundColor(GxEPD_BLACK);
 }
 
-void Epaper290BoardView::render(const DepartureBoard& board, time_t now) {
-  paint([&] {
-    drawHeader(board.stopName, now);
+void Epaper290BoardView::render(const DepartureBoard& board, time_t now,
+                                std::optional<time_t> staleSince, Refresh refresh) {
+  paint(refresh, [&] {
+    drawHeader(board.stopName, now, staleSince);
     if (board.departures.empty()) {
       drawCentered(kMessageBaseline, "No departures");
       return;
@@ -47,34 +55,47 @@ void Epaper290BoardView::render(const DepartureBoard& board, time_t now) {
   });
 }
 
-void Epaper290BoardView::renderNoConnection(time_t now) {
-  paint([&] {
-    drawHeader("", now);
+void Epaper290BoardView::renderNoConnection(time_t now, Refresh refresh) {
+  paint(refresh, [&] {
+    drawHeader("", now, std::nullopt);
     drawCentered(kMessageBaseline, "No connection");
   });
 }
 
-void Epaper290BoardView::paint(const std::function<void()>& drawContent) {
-  display_.setFullWindow();
-  display_.firstPage();
-  do {
-    display_.fillScreen(GxEPD_WHITE);
-    drawContent();
-  } while (display_.nextPage());
-  display_.hibernate();
+void Epaper290BoardView::paint(Refresh refresh, const std::function<void()>& drawContent) {
+  if (refresh == Refresh::Full) {
+    display_.setFullWindow();
+  } else {
+    display_.setPartialWindow(0, 0, display_.width(), display_.height());
+    // The partial waveform barely drives pixels that look unchanged, so static text fades.
+    // An inverted "previous" frame makes every pixel a change and re-drives it, without a flash.
+    drawPage(GxEPD_WHITE, GxEPD_BLACK, drawContent);
+    display_.nextPageToPrevious();
+  }
+  drawPage(GxEPD_BLACK, GxEPD_WHITE, drawContent);
+  display_.nextPage();
+  display_.powerOff();
 }
 
-void Epaper290BoardView::drawHeader(const std::string& stopName, time_t now) {
-  tm local;
-  localtime_r(&now, &local);
-  char clock[6];
-  strftime(clock, sizeof clock, "%H:%M", &local);
+void Epaper290BoardView::drawPage(uint16_t ink, uint16_t paper,
+                                  const std::function<void()>& drawContent) {
+  ink_ = ink;
+  u8g2_.setForegroundColor(ink);
+  display_.firstPage();
+  display_.fillScreen(paper);
+  drawContent();
+}
+
+void Epaper290BoardView::drawHeader(const std::string& stopName, time_t now,
+                                    std::optional<time_t> staleSince) {
+  std::string clock = clockText(now);
+  if (staleSince) clock = "!" + clockText(*staleSince) + "  " + clock;
 
   const int clockWidth = textWidth(clock);
   drawRight(kWidth - kMargin, kHeaderBaseline, clock);
   u8g2_.drawUTF8(kMargin, kHeaderBaseline,
                  fitToWidth(stopName, kWidth - 2 * kMargin - clockWidth - kGap).c_str());
-  display_.drawFastHLine(0, kRuleY, kWidth, GxEPD_BLACK);
+  display_.drawFastHLine(0, kRuleY, kWidth, ink_);
 }
 
 void Epaper290BoardView::drawRow(int row, const Departure& departure, time_t now) {
