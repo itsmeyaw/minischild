@@ -24,6 +24,10 @@ struct Departure {
   std::optional<StopTimeEvent> departure;
 };
 
+inline time_t departureTime(const Departure& d) {
+  return d.departure ? d.departure->time : d.scheduledDepartureTime;
+}
+
 struct DepartureBoard {
   std::string stopName;
   time_t timestamp;

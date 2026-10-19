@@ -1,6 +1,6 @@
 #include <unity.h>
 
-#include "truncate.h"
+#include "util/truncate.h"
 
 // One width unit per code point, so the expectations are easy to count.
 static int codePoints(const std::string& s) {

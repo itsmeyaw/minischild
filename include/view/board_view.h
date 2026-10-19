@@ -2,7 +2,7 @@
 
 #include <ctime>
 
-#include "departure_board.h"
+#include "model/departure_board.h"
 
 class BoardView {
  public:

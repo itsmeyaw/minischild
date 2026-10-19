@@ -1,6 +1,6 @@
 #include <unity.h>
 
-#include "countdown.h"
+#include "view/countdown.h"
 
 // 2026-10-19 12:00:00 UTC
 static const time_t NOON = 1792411200;
