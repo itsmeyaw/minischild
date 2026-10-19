@@ -3,10 +3,9 @@
 
 #include <ctime>
 #include <optional>
-#include <utility>
-#include <variant>
 
-#include "board/board_selection.h"
+#include "board/board_controller.h"
+#include "board/clock.h"
 #include "config.h"
 #include "setup.h"
 
@@ -27,29 +26,27 @@ bool syncClock() {
   tm t;
   return getLocalTime(&t, 10000);
 }
+
+class SystemClock : public Clock {
+ public:
+  time_t now() override { return time(nullptr); }
+};
+
+SystemClock systemClock;
+std::optional<BoardController> controller;
 }  // namespace
 
 void setup() {
   Serial.begin(115200);
   BoardView& view = setupBoardView();
   DepartureProvider& provider = setupDepartureProvider();
-  if (!connectWifi() || !syncClock()) {
-    Serial.println("WiFi or clock sync failed");
-    view.renderNoConnection(time(nullptr), Refresh::Full);
-    return;
-  }
-
-  FetchResult result = provider.fetch();
-  if (auto* error = std::get_if<FetchError>(&result)) {
-    Serial.println(error->message.c_str());
-    view.renderNoConnection(time(nullptr), Refresh::Full);
-    return;
-  }
-  if (auto* board = std::get_if<DepartureBoard>(&result)) {
-    const time_t now = time(nullptr);
-    board->departures = selectDepartures(std::move(board->departures), now);
-    view.render(*board, now, std::nullopt, Refresh::Full);
-  }
+  // Both run even on failure: WiFi auto-reconnects and SNTP keeps polling, so fetches recover.
+  if (!connectWifi()) Serial.println("WiFi connect failed");
+  if (!syncClock()) Serial.println("Clock sync failed");
+  controller.emplace(provider, view, systemClock);
 }
 
-void loop() {}
+void loop() {
+  if (std::optional<FetchError> error = controller->tick()) Serial.println(error->message.c_str());
+  delay(1000);
+}
