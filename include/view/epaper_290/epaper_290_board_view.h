@@ -23,6 +23,8 @@ class Epaper290BoardView : public BoardView {
 
  private:
   void paint(Refresh refresh, const std::function<void()>& drawContent);
+  // One full-screen page (the buffer holds the whole screen), drawn in the given colours.
+  void drawPage(uint16_t ink, uint16_t paper, const std::function<void()>& drawContent);
   void drawHeader(const std::string& stopName, time_t now, std::optional<time_t> staleSince);
   void drawRow(int row, const Departure& departure, time_t now);
   void drawCentered(int baseline, const std::string& text);
@@ -32,4 +34,5 @@ class Epaper290BoardView : public BoardView {
 
   Display& display_;
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
+  uint16_t ink_ = GxEPD_BLACK;
 };
