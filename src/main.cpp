@@ -2,6 +2,7 @@
 #include <WiFi.h>
 
 #include <ctime>
+#include <optional>
 #include <utility>
 #include <variant>
 
@@ -34,20 +35,20 @@ void setup() {
   DepartureProvider& provider = setupDepartureProvider();
   if (!connectWifi() || !syncClock()) {
     Serial.println("WiFi or clock sync failed");
-    view.renderNoConnection(time(nullptr));
+    view.renderNoConnection(time(nullptr), Refresh::Full);
     return;
   }
 
   FetchResult result = provider.fetch();
   if (auto* error = std::get_if<FetchError>(&result)) {
     Serial.println(error->message.c_str());
-    view.renderNoConnection(time(nullptr));
+    view.renderNoConnection(time(nullptr), Refresh::Full);
     return;
   }
   if (auto* board = std::get_if<DepartureBoard>(&result)) {
     const time_t now = time(nullptr);
     board->departures = selectDepartures(std::move(board->departures), now);
-    view.render(*board, now);
+    view.render(*board, now, std::nullopt, Refresh::Full);
   }
 }
 
