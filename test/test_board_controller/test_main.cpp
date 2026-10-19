@@ -244,6 +244,18 @@ void test_clock_jumping_backwards_fetches_again() {
   TEST_ASSERT_EQUAL(2, view.renders);
 }
 
+void test_failure_after_clock_jumped_before_last_good_fetch_renders_no_connection() {
+  provider.result = boardWith({scheduledAt("S1", NOON - 60 * 60)});
+  BoardController controller(provider, view, clock_);
+  controller.tick();
+
+  provider.result = FetchError{"boom"};
+  clock_.current = NOON - 60 * 60;
+  controller.tick();
+
+  TEST_ASSERT_TRUE(view.lastWasNoConnection);
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_first_tick_fetches_and_renders_fresh_board_fully);
@@ -258,5 +270,6 @@ int main() {
   RUN_TEST(test_board_with_no_departures_after_selection_renders_empty);
   RUN_TEST(test_stale_render_reselects_departures_against_current_time);
   RUN_TEST(test_clock_jumping_backwards_fetches_again);
+  RUN_TEST(test_failure_after_clock_jumped_before_last_good_fetch_renders_no_connection);
   return UNITY_END();
 }

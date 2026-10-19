@@ -35,7 +35,7 @@ class BoardController {
     }
     Refresh refresh = renders_ % kFullRefreshEvery == 0 ? Refresh::Full : Refresh::Partial;
     renders_++;
-    if (!lastGood_ || now - lastGoodAt_ > kStaleLimit) {
+    if (!lastGood_ || now < lastGoodAt_ || now - lastGoodAt_ > kStaleLimit) {
       view_.renderNoConnection(now, refresh);
     } else {
       DepartureBoard board = *lastGood_;
