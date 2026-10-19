@@ -19,7 +19,8 @@ void test_builds_the_url_for_two_route_directions() {
       "https://www.mvv-muenchen.de/"
       "?eID=departuresFinder&action=get_departures&stop_id=de%3A09162%3A2"
       "&requested_timestamp=1792411200&lines="
-      "JmxpbmU9ZGRiJTNBOTIwUzElM0ElMjAlM0FIJTNBajI2JmxpbmU9c3dtJTNBMDEwVTMlM0FHJTNBSCUzQTAxNg==",
+      "JmxpbmU9ZGRiJTNBOTIwUzElM0ElMjAlM0FIJTNBajI2JmxpbmU9c3dtJTNBMDEwVTMlM0FHJTNBSCUzQTAxNg%3D%"
+      "3D",
       url.c_str());
 }
 
@@ -37,7 +38,17 @@ void test_pads_base64_with_a_single_equals_sign() {
   TEST_ASSERT_EQUAL_STRING(
       "https://www.mvv-muenchen.de/"
       "?eID=departuresFinder&action=get_departures&stop_id=de%3A09162%3A2"
-      "&requested_timestamp=1792411200&lines=JmxpbmU9YWI=",
+      "&requested_timestamp=1792411200&lines=JmxpbmU9YWI%3D",
+      url.c_str());
+}
+
+// A raw "+" in the query would reach MVV as a space.
+void test_percent_encodes_base64_plus() {
+  std::string url = mvvDeparturesUrl("de:09162:2", {"aa~"}, NOON);
+  TEST_ASSERT_EQUAL_STRING(
+      "https://www.mvv-muenchen.de/"
+      "?eID=departuresFinder&action=get_departures&stop_id=de%3A09162%3A2"
+      "&requested_timestamp=1792411200&lines=JmxpbmU9YWF%2B",
       url.c_str());
 }
 
@@ -46,5 +57,6 @@ int main() {
   RUN_TEST(test_builds_the_url_for_two_route_directions);
   RUN_TEST(test_builds_the_url_for_a_single_route_direction);
   RUN_TEST(test_pads_base64_with_a_single_equals_sign);
+  RUN_TEST(test_percent_encodes_base64_plus);
   return UNITY_END();
 }
