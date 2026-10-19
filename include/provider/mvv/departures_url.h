@@ -40,6 +40,11 @@ inline std::string base64(const std::string& in) {
   return out;
 }
 
+inline std::string stationUrl(const char* action, const std::string& stationId) {
+  return std::string("https://www.mvv-muenchen.de/?eID=departuresFinder&action=") + action +
+         "&stop_id=" + percentEncode(stationId);
+}
+
 }  // namespace mvv_url_detail
 
 // URL of the MVV website's departures endpoint for a Station and the Route Directions to show.
@@ -50,8 +55,12 @@ inline std::string mvvDeparturesUrl(const std::string& stationId,
   for (const std::string& id : routeDirectionIds) {
     lines += "&line=" + mvv_url_detail::percentEncode(id);
   }
-  return "https://www.mvv-muenchen.de/?eID=departuresFinder&action=get_departures&stop_id=" +
-         mvv_url_detail::percentEncode(stationId) +
+  return mvv_url_detail::stationUrl("get_departures", stationId) +
          "&requested_timestamp=" + std::to_string(requestedTimestamp) +
          "&lines=" + mvv_url_detail::percentEncode(mvv_url_detail::base64(lines));
+}
+
+// URL of the MVV website's endpoint listing the Route Directions of a Station.
+inline std::string mvvAvailableLinesUrl(const std::string& stationId) {
+  return mvv_url_detail::stationUrl("available_lines", stationId);
 }

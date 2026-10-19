@@ -6,8 +6,10 @@
 #include <ctime>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
+#include "provider/mvv/available_lines_parser.h"
 #include "provider/mvv/departure_parser.h"
 #include "provider/mvv/departures_url.h"
 
@@ -48,22 +50,16 @@ L6KCq9NjRHDEjf8tM7qtj3u1cIiuPhnPQCjY/MiQu12ZIvVS5ljFH4gxQ+6IHdfG
 jjxDah2nGN59PRbxYvnKkKj9
 -----END CERTIFICATE-----
 )";
-}  // namespace
 
-MvvDepartureProvider::MvvDepartureProvider(std::string stationId,
-                                           std::vector<std::string> routeDirectionIds)
-    : stationId_(std::move(stationId)), routeDirectionIds_(std::move(routeDirectionIds)) {}
-
-FetchResult MvvDepartureProvider::fetch() {
-  const time_t now = time(nullptr);
+// GETs url and stream-parses the body; HTTP failures become a FetchError in Result.
+template <typename Result, typename Parse>
+Result getJson(const std::string& url, Parse parse) {
   WiFiClientSecure client;
   client.setCACert(kUserTrustRsaRootCa);
   HTTPClient http;
   // HTTP/1.0 has no chunked encoding, so the body can be stream-parsed.
   http.useHTTP10(true);
-  if (!http.begin(client, mvvDeparturesUrl(stationId_, routeDirectionIds_, now).c_str())) {
-    return FetchError{"HTTP begin failed"};
-  }
+  if (!http.begin(client, url.c_str())) return FetchError{"HTTP begin failed"};
   const int code = http.GET();
   if (code < 200 || code >= 300) {
     std::string message = "HTTP " + std::to_string(code);
@@ -71,7 +67,28 @@ FetchResult MvvDepartureProvider::fetch() {
     http.end();
     return FetchError{message};
   }
-  FetchResult result = parseMvvDepartures(http.getStream(), now);
+  Result result = parse(http.getStream());
   http.end();
   return result;
+}
+}  // namespace
+
+MvvDepartureProvider::MvvDepartureProvider(std::string stationId,
+                                           std::vector<std::string> routeDirectionIds)
+    : stationId_(std::move(stationId)),
+      routeDirections_(std::move(routeDirectionIds), [stationId = stationId_] {
+        return getJson<RouteDirectionsResult>(mvvAvailableLinesUrl(stationId), [](Stream& body) {
+          return parseMvvAvailableLines(body);
+        });
+      }) {}
+
+FetchResult MvvDepartureProvider::fetch() {
+  const RouteDirectionsResult routeDirections = routeDirections_.get();
+  if (const FetchError* error = std::get_if<FetchError>(&routeDirections)) return *error;
+  const std::vector<std::string>& ids = std::get<std::vector<std::string>>(routeDirections);
+  const time_t now = time(nullptr);
+  // MVV rejects a departures request without lines; a Station without Route Directions has none.
+  if (ids.empty()) return DepartureBoard{"", now, {}};
+  return getJson<FetchResult>(mvvDeparturesUrl(stationId_, ids, now),
+                              [now](Stream& body) { return parseMvvDepartures(body, now); });
 }
