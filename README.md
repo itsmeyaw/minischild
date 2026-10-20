@@ -25,10 +25,13 @@ Minischild runs on an ESP32 and renders a live departure board on an e-paper dis
    - the Station ID and, optionally, the Route Direction IDs to show (leave the list empty to show every Route at the Station)
    - the e-paper pin wiring, if it differs from the default
 2. Flash the board:
+
    ```sh
    pio run -e esp32dev -t upload
    ```
+
 3. Run the native tests:
+
    ```sh
    pio test -e native
    ```
@@ -75,6 +78,7 @@ docs/adr/              architecture decisions
 
 ## Further reading
 
-- [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebase
+- [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebaseA
+- Each provider's `README.md` inside `include/providers/`
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — principles the code follows
 - [`docs/adr/`](docs/adr) — why the view/provider split and the GTFS-shaped model exist
