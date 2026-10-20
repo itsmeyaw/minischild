@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned: clang-format output changes between major versions.
+      - name: Check formatting
+        run: git ls-files '*.cpp' '*.h' | xargs pipx run --spec clang-format==22.1.8 clang-format --dry-run --Werror
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Run native tests
+        run: pio test -e native
+      - name: Build firmware
+        run: |
+          cp include/config.example.h include/config.h
+          pio run -e esp32dev
