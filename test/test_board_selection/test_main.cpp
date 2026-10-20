@@ -52,6 +52,14 @@ void test_keeps_only_the_first_five_departures() {
   TEST_ASSERT_EQUAL_STRING("4", sorted[4].routeShortName.c_str());
 }
 
+void test_equal_times_keep_input_order() {
+  std::vector<Departure> sorted =
+      selectDepartures({scheduledAt("X", NOON + 60), scheduledAt("Y", NOON + 60)}, NOON);
+  TEST_ASSERT_EQUAL(2, sorted.size());
+  TEST_ASSERT_EQUAL_STRING("X", sorted[0].routeShortName.c_str());
+  TEST_ASSERT_EQUAL_STRING("Y", sorted[1].routeShortName.c_str());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_sorts_by_predicted_time_when_present_else_scheduled);
@@ -59,5 +67,6 @@ int main() {
   RUN_TEST(test_keeps_departure_within_the_current_minute);
   RUN_TEST(test_keeps_departure_predicted_in_the_future_despite_past_schedule);
   RUN_TEST(test_keeps_only_the_first_five_departures);
+  RUN_TEST(test_equal_times_keep_input_order);
   return UNITY_END();
 }

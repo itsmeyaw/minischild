@@ -271,6 +271,23 @@ void test_failure_after_clock_jumped_before_last_good_fetch_renders_no_connectio
   TEST_ASSERT_TRUE(view.lastWasNoConnection);
 }
 
+void test_board_too_stale_to_show_is_never_shown_again() {
+  provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
+  BoardController controller(provider, view, clock_);
+  controller.tick();
+
+  clock_.current = NOON + 10 * 60 + 1;
+  provider.result = FetchError{"boom"};
+  controller.tick();
+
+  clock_.current = NOON + 5 * 60;
+  controller.tick();
+
+  TEST_ASSERT_EQUAL(1, view.renders);
+  TEST_ASSERT_EQUAL(2, view.noConnections);
+  TEST_ASSERT_TRUE(view.lastWasNoConnection);
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_first_tick_fetches_and_renders_fresh_board_fully);
@@ -287,5 +304,6 @@ int main() {
   RUN_TEST(test_stale_render_reselects_departures_against_current_time);
   RUN_TEST(test_clock_jumping_backwards_fetches_again);
   RUN_TEST(test_failure_after_clock_jumped_before_last_good_fetch_renders_no_connection);
+  RUN_TEST(test_board_too_stale_to_show_is_never_shown_again);
   return UNITY_END();
 }
