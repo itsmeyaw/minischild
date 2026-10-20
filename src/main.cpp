@@ -62,6 +62,11 @@ void loop() {
     case WatchdogAction::None:
       break;
   }
-  if (std::optional<FetchError> error = controller->tick()) Serial.println(error->message.c_str());
+  // Heap figures tell a fragmented heap (TLS needs two ~16 KB blocks) from a network error.
+  if (std::optional<FetchError> error = controller->tick()) {
+    Serial.printf("%s (free heap %u, largest block %u)\n", error->message.c_str(),
+                  static_cast<unsigned>(ESP.getFreeHeap()),
+                  static_cast<unsigned>(ESP.getMaxAllocHeap()));
+  }
   delay(1000);
 }
