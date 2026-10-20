@@ -51,6 +51,25 @@ jjxDah2nGN59PRbxYvnKkKj9
 -----END CERTIFICATE-----
 )";
 
+// Observed on Arduino core 3.x: TLS reads only see newly arrived data if the caller yields while
+// waiting, which neither NetworkClient::readBytes nor Stream::timedRead does.
+struct WaitingReader {
+  Stream& stream;
+  int read() {
+    const unsigned long start = millis();
+    while (stream.available() <= 0) {
+      if (millis() - start >= stream.getTimeout()) return -1;
+      delay(1);
+    }
+    return stream.read();
+  }
+  size_t readBytes(char* buffer, size_t length) {
+    size_t count = 0;
+    for (int c; count < length && (c = read()) >= 0; count++) buffer[count] = static_cast<char>(c);
+    return count;
+  }
+};
+
 // GETs url and stream-parses the body; HTTP failures become a FetchError in Result.
 template <typename Result, typename Parse>
 Result getJson(const std::string& url, Parse parse) {
@@ -67,7 +86,8 @@ Result getJson(const std::string& url, Parse parse) {
     http.end();
     return FetchError{message};
   }
-  Result result = parse(http.getStream());
+  WaitingReader body{http.getStream()};
+  Result result = parse(body);
   http.end();
   return result;
 }
@@ -77,9 +97,9 @@ MvvDepartureProvider::MvvDepartureProvider(std::string stationId,
                                            std::vector<std::string> routeDirectionIds)
     : stationId_(std::move(stationId)),
       routeDirections_(std::move(routeDirectionIds), [stationId = stationId_] {
-        return getJson<RouteDirectionsResult>(mvvAvailableLinesUrl(stationId), [](Stream& body) {
-          return parseMvvAvailableLines(body);
-        });
+        return getJson<RouteDirectionsResult>(
+            mvvAvailableLinesUrl(stationId),
+            [](WaitingReader& body) { return parseMvvAvailableLines(body); });
       }) {}
 
 FetchResult MvvDepartureProvider::fetch() {
@@ -90,5 +110,5 @@ FetchResult MvvDepartureProvider::fetch() {
   // MVV rejects a departures request without lines; a Station without Route Directions has none.
   if (ids.empty()) return DepartureBoard{"", now, {}};
   return getJson<FetchResult>(mvvDeparturesUrl(stationId_, ids, now),
-                              [now](Stream& body) { return parseMvvDepartures(body, now); });
+                              [now](WaitingReader& body) { return parseMvvDepartures(body, now); });
 }
