@@ -6,7 +6,7 @@ A small always-on display that shows the upcoming public transport departures at
 
 </div>
 
-Minischild runs on an ESP32 and renders a live departure board on an e-paper display. It fetches realtime data from a transit provider (MVV out of the box), shapes it into a GTFS Realtime-like model, and lets any display implementation render it — no code changes needed to swap hardware or data source.
+Minischild runs on an ESP32 and renders a live departure board on an e-paper display. It fetches realtime data from a transit provider (MVV out of the box), shapes it into a GTFS Realtime-like model, and lets any display implementation render it.
 
 ## Requirements
 
