@@ -11,6 +11,9 @@ permissions:
 jobs:
   format:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware
     steps:
       - uses: actions/checkout@v7
       # Pinned: clang-format output changes between major versions.
@@ -19,6 +22,9 @@ jobs:
 
   build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware
     steps:
       - uses: actions/checkout@v7
       - uses: actions/cache@v6
@@ -26,7 +32,7 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
-          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+          key: ${{ runner.os }}-pio-${{ hashFiles('firmware/platformio.ini') }}
       - uses: actions/setup-python@v7
         with:
           python-version: '3.14'
