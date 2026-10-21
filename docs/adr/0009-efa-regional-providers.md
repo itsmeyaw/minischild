@@ -11,7 +11,7 @@ Departures for `vvs`, `vrr`, `kvv` and `bavaria` come from EFA servers, which an
 
 The servers are public, unofficial and undocumented, with no SLA, and may change without notice. A change to the schema is fixed once in the shared `efa` folder. TLS is pinned to DigiCert Global Root G2 (RSA, SHA-256 fingerprint `CB:3C:CB:B7:60:31:E5:E0:13:8F:8D:D3:9A:23:F9:DE:47:FF:C3:5E:43:C1:14:4C:EA:27:D4:6A:5A:B1:CB:5F`), which all four hosts were verified against with `openssl` and which expires on 2038-01-15. A server on another chain needs its own root header. The header-only provider class is compiled into the build of the picked region only.
 
-Each Departure is about 1.5 to 12 KB, so 10 Departures are roughly 24 to 60 KB. They are read through an ArduinoJson filter that keeps only the fields a Departure needs. The request asks for 20 when filtering, because the servers have no usable line filter.
+Measured on one busy Station per region, 10 Departures are about 24 KB (`bavaria`) to 59 KB (`kvv`), and 20 are about 42 KB to 123 KB. The body is never buffered: it is read through an ArduinoJson filter that keeps only the fields a Departure needs. The request asks for 20 when filtering, because the servers have no usable line filter. The cost is that a Route Direction running less often than the 20 nearest Departures of its Station can show an empty board.
 
 Other EFA servers (VRN, DING, EFA-BW) answered the same schema during exploration but are not included. Adding one means a new provider folder with its own `EfaInstance`.
 

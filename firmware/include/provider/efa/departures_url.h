@@ -6,7 +6,7 @@
 #include "util/percent_encode.h"
 
 // The server has no usable line filter, so Route Directions are filtered on the Device; 20 leaves
-// enough after filtering, and 10 keeps the unfiltered payload at ~24-60 KB.
+// enough after filtering, and 10 keeps the unfiltered payload at ~24-60 KB (20: ~40-125 KB).
 inline constexpr int kEfaLimitUnfiltered = 10;
 inline constexpr int kEfaLimitFiltered = 20;
 
