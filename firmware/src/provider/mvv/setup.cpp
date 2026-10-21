@@ -1,9 +1,8 @@
 #include "setup.h"
 
-#include "config.h"
 #include "provider/mvv/departure_provider.h"
 
-DepartureProvider& setupDepartureProvider() {
-  static MvvDepartureProvider provider(STATION_ID, ROUTE_DIRECTION_IDS);
+DepartureProvider& setupDepartureProvider(const BoardSelection& selection) {
+  static MvvDepartureProvider provider(selection.stationId, selection.routeDirectionIds);
   return provider;
 }

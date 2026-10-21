@@ -66,7 +66,7 @@ Paths below are relative to `firmware/`.
 
 ### Add a data provider
 
-Same pattern: implement `DepartureProvider` (`include/provider/departure_provider.h`) in `include/provider/<name>/` and `src/provider/<name>/`, define `DepartureProvider& setupDepartureProvider()` in `src/provider/<name>/setup.cpp`, and build with `PROVIDER=<name> pio run -e esp32dev`. Map the source into the GTFS Realtime-shaped model (`docs/adr/0002-gtfs-realtime-shaped-model.md`) so every view can render it.
+Same pattern: implement `DepartureProvider` (`include/provider/departure_provider.h`) in `include/provider/<name>/` and `src/provider/<name>/`, define `DepartureProvider& setupDepartureProvider(const BoardSelection&)` in `src/provider/<name>/setup.cpp`, taking the Station and Route Directions from the Board Selection rather than `config.h`, and build with `PROVIDER=<name> pio run -e esp32dev`. Map the source into the GTFS Realtime-shaped model (`docs/adr/0002-gtfs-realtime-shaped-model.md`) so every view can render it.
 
 A folder without its `setup.cpp` fails to link with `undefined reference to setupBoardView()` (or `setupDepartureProvider()`).
 

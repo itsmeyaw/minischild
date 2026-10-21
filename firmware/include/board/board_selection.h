@@ -3,9 +3,16 @@
 #include <algorithm>
 #include <cstddef>
 #include <ctime>
+#include <string>
 #include <vector>
 
 #include "model/departure_board.h"
+
+// The Station and Route Directions shown on a Device; an empty list means all of them.
+struct BoardSelection {
+  std::string stationId;
+  std::vector<std::string> routeDirectionIds;
+};
 
 // Upcoming Departures soonest first, at most limit. A Departure in the current minute still
 // counts as upcoming, matching countdownLabel's "now".

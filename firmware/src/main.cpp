@@ -41,7 +41,8 @@ ConnectionWatchdog watchdog;
 void setup() {
   Serial.begin(115200);
   BoardView& view = setupBoardView();
-  DepartureProvider& provider = setupDepartureProvider();
+  const BoardSelection selection{STATION_ID, ROUTE_DIRECTION_IDS};
+  DepartureProvider& provider = setupDepartureProvider(selection);
   // Both run even on failure: the watchdog retries WiFi and SNTP keeps polling, so fetches recover.
   if (!connectWifi()) Serial.println("WiFi connect failed");
   if (!syncClock()) Serial.println("Clock sync failed");
