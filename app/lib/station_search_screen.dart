@@ -114,10 +114,17 @@ class _StationSearchScreenState extends State<StationSearchScreen> {
 
   Future<void> _save(Station station) async {
     setState(() => _saving = true);
+    final settings = widget.settings;
     await writeSettingsAndClose(
       context,
       widget.link,
-      widget.settings.copyWith(stationId: station.id),
+      station.id == settings.stationId
+          ? settings
+          : settings.copyWith(
+              stationId: station.id,
+              routeDirectionIds: const [],
+              platforms: const [],
+            ),
     );
     if (mounted) setState(() => _saving = false);
   }

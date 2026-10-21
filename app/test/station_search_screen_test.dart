@@ -82,8 +82,8 @@ void main() {
     expect(link.writes, hasLength(1));
     final write = link.writes.single;
     expect(write.settings.stationId, 'de:09162:20');
-    expect(write.settings.routeDirectionIds, settings.routeDirectionIds);
-    expect(write.settings.platforms, settings.platforms);
+    expect(write.settings.routeDirectionIds, isEmpty);
+    expect(write.settings.platforms, isEmpty);
     expect(write.settings.wifiSsid, settings.wifiSsid);
     expect(write.wifiPassword, '');
     expect(find.text('The Device is restarting'), findsOneWidget);
@@ -99,6 +99,31 @@ void main() {
     expect(find.text('The Device is restarting'), findsNothing);
     expect(find.text('Looking for Devices…'), findsOneWidget);
   });
+
+  testWidgets(
+    'choosing the current Station again keeps its Routes and Platforms',
+    (tester) async {
+      final link = await openDevice(tester);
+      await openStationSearch(tester);
+
+      await search(tester, 'Marienpl');
+      await tester.tap(
+        find.descendant(
+          of: find.byType(StationSearchScreen),
+          matching: find.text('München, Marienplatz'),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Save'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+
+      final write = link.writes.single;
+      expect(write.settings.stationId, 'de:09162:2');
+      expect(write.settings.routeDirectionIds, settings.routeDirectionIds);
+      expect(write.settings.platforms, settings.platforms);
+    },
+  );
 
   testWidgets('the query is the typed text, sent once after typing pauses', (
     tester,
