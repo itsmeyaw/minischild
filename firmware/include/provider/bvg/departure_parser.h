@@ -27,8 +27,8 @@ inline FetchResult toBvgDepartureBoard(JsonObjectConst root, time_t now,
   board.stopName = root["departures"][0]["stop"]["name"] | "";
   for (JsonObjectConst dep : root["departures"].as<JsonArrayConst>()) {
     if (dep["cancelled"] | false) continue;
-    std::string routeDirectionId =
-        bvgRouteDirectionId(dep["line"]["name"] | "", dep["destination"]["id"] | "");
+    std::string lineName = dep["line"]["name"] | "";
+    std::string routeDirectionId = bvgRouteDirectionId(lineName, dep["destination"]["id"] | "");
     if (!routeDirectionIds.empty() && std::find(routeDirectionIds.begin(), routeDirectionIds.end(),
                                                 routeDirectionId) == routeDirectionIds.end()) {
       continue;
@@ -36,7 +36,7 @@ inline FetchResult toBvgDepartureBoard(JsonObjectConst root, time_t now,
     std::optional<time_t> planned = parseIso8601(dep["plannedWhen"] | "");
     if (!planned) continue;
     Departure d{};
-    d.routeShortName = dep["line"]["name"] | "";
+    d.routeShortName = lineName;
     d.tripHeadsign = dep["direction"] | "";
     d.platformCode = dep["platform"] | "";
     if (d.platformCode.empty()) d.platformCode = dep["plannedPlatform"] | "";
