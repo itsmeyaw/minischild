@@ -8,12 +8,14 @@
 #include "board/clock.h"
 #include "board/connection_watchdog.h"
 #include "config.h"
+#include "settings/nvs_settings_backend.h"
+#include "settings/settings_store.h"
 #include "setup.h"
 
 namespace {
-bool connectWifi() {
+bool connectWifi(const std::string& ssid, const std::string& password) {
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(ssid.c_str(), password.c_str());
   const unsigned long deadline = millis() + 20000;
   while (WiFi.status() != WL_CONNECTED) {
     if (millis() > deadline) return false;
@@ -34,19 +36,26 @@ class SystemClock : public Clock {
 };
 
 SystemClock systemClock;
+NvsSettingsBackend settingsBackend;
+std::optional<SettingsStore> settingsStore;
 std::optional<BoardController> controller;
 ConnectionWatchdog watchdog;
 }  // namespace
 
 void setup() {
   Serial.begin(115200);
+  settingsStore.emplace(
+      settingsBackend,
+      Settings{{STATION_ID, ROUTE_DIRECTION_IDS, PLATFORMS}, WIFI_SSID, WIFI_PASSWORD});
+  const Settings settings = settingsStore->load();
   BoardView& view = setupBoardView();
-  const BoardSelection selection{STATION_ID, ROUTE_DIRECTION_IDS, PLATFORMS};
-  DepartureProvider& provider = setupDepartureProvider(selection);
+  DepartureProvider& provider = setupDepartureProvider(settings.boardSelection);
   // Both run even on failure: the watchdog retries WiFi and SNTP keeps polling, so fetches recover.
-  if (!connectWifi()) Serial.println("WiFi connect failed");
+  if (!connectWifi(settings.wifiSsid, settings.wifiPassword)) {
+    Serial.println("WiFi connect failed");
+  }
   if (!syncClock()) Serial.println("Clock sync failed");
-  controller.emplace(provider, view, systemClock, selection.platforms);
+  controller.emplace(provider, view, systemClock, settings.boardSelection.platforms);
 }
 
 void loop() {

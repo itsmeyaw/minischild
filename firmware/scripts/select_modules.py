@@ -1,5 +1,6 @@
-# Picks the view and provider folders under src/ to build. The VIEW and PROVIDER environment
-# variables override custom_view and custom_provider in platformio.ini.
+# Builds everything under src/ except the view and provider folders, plus the picked ones.
+# The VIEW and PROVIDER environment variables override custom_view and custom_provider in
+# platformio.ini.
 import os
 import sys
 
@@ -21,7 +22,9 @@ for kind, variable in (("view", "VIEW"), ("provider", "PROVIDER")):
 print("Building view=%(view)s provider=%(provider)s" % selected)
 env.Replace(
     SRC_FILTER=[
-        "+<main.cpp>",
+        "+<*>",
+        "-<view/>",
+        "-<provider/>",
         "+<view/%s/>" % selected["view"],
         "+<provider/%s/>" % selected["provider"],
     ]

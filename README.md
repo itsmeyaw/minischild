@@ -26,6 +26,8 @@ The firmware is a PlatformIO project in `firmware/`; run every `pio` command bel
    - WiFi SSID and password
    - the Station ID and, optionally, the Route Direction IDs and Platforms to show (leave a list empty to show everything of that kind)
    - the e-paper pin wiring, if it differs from the default
+
+   Settings written over BLE (see [`docs/ble-protocol.md`](docs/ble-protocol.md)) are stored on the Device and override the WiFi and Board Selection values in `config.h`.
 2. Flash the board:
 
    ```sh
