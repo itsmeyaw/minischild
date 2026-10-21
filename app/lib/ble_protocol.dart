@@ -88,8 +88,9 @@ class Settings {
     };
   }
 
+  /// Throws FormatException if the document is over 512 bytes.
   List<int> encode({String wifiPassword = ''}) {
-    return utf8.encode(
+    final bytes = utf8.encode(
       jsonEncode({
         'stationId': stationId,
         'routeDirectionIds': routeDirectionIds,
@@ -98,5 +99,9 @@ class Settings {
         if (wifiPassword.isNotEmpty) 'wifiPassword': wifiPassword,
       }),
     );
+    if (bytes.length > _maxBytes) {
+      throw const FormatException('document is over 512 bytes');
+    }
+    return bytes;
   }
 }

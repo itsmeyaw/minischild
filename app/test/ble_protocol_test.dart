@@ -133,4 +133,15 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('refuses to encode a document over 512 bytes', () {
+    final settings = Settings.decode(readExample('valid/settings-read.json'));
+
+    expect(
+      () => settings
+          .copyWith(routeDirectionIds: List.filled(30, 'ddb:920S1: :H:j26'))
+          .encode(),
+      throwsFormatException,
+    );
+  });
 }

@@ -114,13 +114,11 @@ class UniversalBleDeviceLink implements DeviceLink {
     Settings settings, {
     String wifiPassword = '',
   }) async {
+    final bytes = Uint8List.fromList(
+      settings.encode(wifiPassword: wifiPassword),
+    );
     try {
-      await UniversalBle.write(
-        _deviceId!,
-        _serviceUuid,
-        _settingsUuid,
-        Uint8List.fromList(settings.encode(wifiPassword: wifiPassword)),
-      );
+      await UniversalBle.write(_deviceId!, _serviceUuid, _settingsUuid, bytes);
     } catch (error) {
       debugPrint('Writing settings failed: $error');
       throw const DeviceLinkException(DeviceLinkError.connectionFailed);

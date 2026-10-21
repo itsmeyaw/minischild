@@ -54,6 +54,7 @@ class FakeDeviceLink implements DeviceLink {
     Settings settings, {
     String wifiPassword = '',
   }) async {
+    settings.encode(wifiPassword: wifiPassword);
     if (writeError case final error?) throw error;
     writes.add((settings: settings, wifiPassword: wifiPassword));
   }

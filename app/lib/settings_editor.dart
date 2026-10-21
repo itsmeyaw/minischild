@@ -34,19 +34,21 @@ Future<void> writeSettingsAndClose(
   Settings settings, {
   String wifiPassword = '',
 }) async {
+  final String failure;
   try {
     await link.writeSettings(settings, wifiPassword: wifiPassword);
-  } on DeviceLinkException {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Couldn’t save. Make sure the Device is on and nearby, then try again.',
-          ),
-        ),
-      );
-    }
+    if (context.mounted) Navigator.of(context).pop(true);
     return;
+  } on FormatException {
+    failure =
+        'This is too much for the Device to store. Choose fewer Route Directions or Platforms, or use a shorter password.';
+  } on DeviceLinkException {
+    failure =
+        'Couldn’t save. Make sure the Device is on and nearby, then try again.';
   }
-  if (context.mounted) Navigator.of(context).pop(true);
+  if (context.mounted) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(failure)));
+  }
 }

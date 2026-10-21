@@ -29,10 +29,14 @@ void main() {
   Future<FakeDeviceLink> openDevice(
     WidgetTester tester, {
     DeviceInfo? deviceInfo,
+    Settings? deviceSettings,
     ProviderLookup? providerFor,
   }) async {
     final provider = mvvProvider();
-    final link = FakeDeviceLink(info: deviceInfo ?? info, settings: settings);
+    final link = FakeDeviceLink(
+      info: deviceInfo ?? info,
+      settings: deviceSettings ?? settings,
+    );
     await tester.pumpWidget(
       CompanionApp(
         link: link,
@@ -188,6 +192,45 @@ void main() {
       findsOneWidget,
     );
     expect(find.widgetWithText(AppBar, 'WiFi network'), findsOneWidget);
+    expect(find.text('The Device is restarting'), findsNothing);
+    expect(link.writes, isEmpty);
+  });
+
+  testWidgets('a document over 512 bytes is refused and nothing is written', (
+    tester,
+  ) async {
+    final routeId = 'r' * 389;
+    final deviceSettings = settings.copyWith(routeDirectionIds: [routeId]);
+    expect(deviceSettings.encode().length, lessThanOrEqualTo(512));
+    expect(
+      () => deviceSettings.encode(wifiPassword: 'p' * 64),
+      throwsFormatException,
+    );
+    final link = await openDevice(
+      tester,
+      deviceSettings: deviceSettings,
+      providerFor: (name) => name == 'mvv'
+          ? FakeTransitProvider(
+              routeResults: [
+                RouteDirection(id: routeId, route: 'S1', headsign: 'Freising'),
+              ],
+            )
+          : null,
+    );
+    await openWifi(tester);
+
+    await tester.enterText(passwordField(), 'p' * 64);
+    await save(tester);
+
+    expect(
+      find.descendant(
+        of: find.byType(WifiScreen),
+        matching: find.text(
+          'This is too much for the Device to store. Choose fewer Route Directions or Platforms, or use a shorter password.',
+        ),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('The Device is restarting'), findsNothing);
     expect(link.writes, isEmpty);
   });
