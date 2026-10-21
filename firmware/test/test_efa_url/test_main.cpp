@@ -1,6 +1,7 @@
 #include <unity.h>
 
 #include <string>
+#include <vector>
 
 #include "provider/efa/departures_url.h"
 
@@ -14,8 +15,18 @@ void test_builds_the_departures_url_for_a_station() {
       efaDeparturesUrl("https://www3.vvs.de/mngvvs", "de:08111:6118", 20).c_str());
 }
 
+void test_efa_limit_is_10_without_route_directions() {
+  TEST_ASSERT_EQUAL_INT(10, efaDepartureLimit({}));
+}
+
+void test_efa_limit_is_20_with_route_directions() {
+  TEST_ASSERT_EQUAL_INT(20, efaDepartureLimit({"S1:1"}));
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_builds_the_departures_url_for_a_station);
+  RUN_TEST(test_efa_limit_is_10_without_route_directions);
+  RUN_TEST(test_efa_limit_is_20_with_route_directions);
   return UNITY_END();
 }
