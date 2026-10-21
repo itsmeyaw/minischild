@@ -24,7 +24,7 @@ The firmware is a PlatformIO project in `firmware/`; run every `pio` command bel
 
 1. Copy `firmware/include/config.example.h` to `firmware/include/config.h`, then fill in:
    - WiFi SSID and password
-   - the Station ID and, optionally, the Route Direction IDs to show (leave the list empty to show every Route at the Station)
+   - the Station ID and, optionally, the Route Direction IDs and Platforms to show (leave a list empty to show everything of that kind)
    - the e-paper pin wiring, if it differs from the default
 2. Flash the board:
 
@@ -66,7 +66,7 @@ Paths below are relative to `firmware/`.
 
 ### Add a data provider
 
-Same pattern: implement `DepartureProvider` (`include/provider/departure_provider.h`) in `include/provider/<name>/` and `src/provider/<name>/`, define `DepartureProvider& setupDepartureProvider()` in `src/provider/<name>/setup.cpp`, and build with `PROVIDER=<name> pio run -e esp32dev`. Map the source into the GTFS Realtime-shaped model (`docs/adr/0002-gtfs-realtime-shaped-model.md`) so every view can render it.
+Same pattern: implement `DepartureProvider` (`include/provider/departure_provider.h`) in `include/provider/<name>/` and `src/provider/<name>/`, define `DepartureProvider& setupDepartureProvider(const BoardSelection&)` in `src/provider/<name>/setup.cpp`, taking the Station and Route Directions from the Board Selection rather than `config.h`, and build with `PROVIDER=<name> pio run -e esp32dev`. Map the source into the GTFS Realtime-shaped model (`docs/adr/0002-gtfs-realtime-shaped-model.md`) so every view can render it.
 
 A folder without its `setup.cpp` fails to link with `undefined reference to setupBoardView()` (or `setupDepartureProvider()`).
 

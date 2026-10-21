@@ -22,3 +22,6 @@ constexpr const char* WIFI_PASSWORD = "your-password";
 // Leave ROUTE_DIRECTION_IDS empty ({}) to show all Routes at the Station.
 constexpr const char* STATION_ID = "de:09162:2";
 inline const std::vector<std::string> ROUTE_DIRECTION_IDS = {"ddb:920S1: :H:j26"};
+// Platforms to show, matched by exact text as the provider names them (e.g. "2", "U-Bahn Gleis 1").
+// Leave empty ({}) to show every Platform; when set, Departures without a Platform are hidden.
+inline const std::vector<std::string> PLATFORMS = {};
