@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'device_link.dart';
+import 'device_screen.dart';
 import 'status_message.dart';
 import 'transit_provider.dart';
 
@@ -14,7 +15,7 @@ class DeviceListScreen extends StatefulWidget {
   });
 
   final DeviceLink link;
-  final TransitProvider? Function(String providerName) providerFor;
+  final ProviderLookup providerFor;
 
   @override
   State<DeviceListScreen> createState() => _DeviceListScreenState();
@@ -45,12 +46,27 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     );
   }
 
-  void _retry() {
+  void _restartScan() {
     setState(() {
       _devices = const [];
       _error = null;
     });
     _startScan();
+  }
+
+  Future<void> _openDevice(FoundDevice device) async {
+    _scan?.cancel();
+    _scan = null;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DeviceScreen(
+          device: device,
+          link: widget.link,
+          providerFor: widget.providerFor,
+        ),
+      ),
+    );
+    _restartScan();
   }
 
   @override
@@ -77,6 +93,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
             leading: const Icon(Icons.bluetooth),
             title: Text(device.name),
             trailing: const Icon(Icons.chevron_right),
+            onTap: () => _openDevice(device),
           ),
       ],
     );
@@ -84,7 +101,7 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
 
   Widget _scanFailure(Object error) {
     final tryAgain = FilledButton(
-      onPressed: _retry,
+      onPressed: _restartScan,
       child: const Text('Try again'),
     );
     return switch (error) {

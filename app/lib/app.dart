@@ -14,7 +14,7 @@ class CompanionApp extends StatelessWidget {
   });
 
   final DeviceLink link;
-  final TransitProvider? Function(String providerName) providerFor;
+  final ProviderLookup providerFor;
 
   @override
   Widget build(BuildContext context) {

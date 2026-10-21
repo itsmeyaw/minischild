@@ -22,3 +22,5 @@ abstract interface class TransitProvider {
 
   Future<List<RouteDirection>> routeDirections(String stationId);
 }
+
+typedef ProviderLookup = TransitProvider? Function(String providerName);
