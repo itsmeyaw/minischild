@@ -38,3 +38,15 @@ _Avoid_: Unknown, offline
 **Departure Board**:
 The set of upcoming Departures at the Station at one moment, and the screen that shows them.
 _Avoid_: Schedule, timetable, widget
+
+**Board Selection**:
+The Station, Route Directions and Platforms chosen to be shown on a Device; an empty list of Route Directions or Platforms means all of them.
+_Avoid_: Config, settings, filter
+
+**Device**:
+The always-on display hardware that shows one Departure Board.
+_Avoid_: Board, unit, ESP
+
+**Companion App**:
+The phone app that sets a Device's Board Selection.
+_Avoid_: Client, configurator
