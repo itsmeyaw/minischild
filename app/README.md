@@ -6,7 +6,7 @@ App ID: `id.itsmeyaw.minischild`
 
 ## Prerequisites
 
-- [Flutter](https://docs.flutter.dev/get-started/install) stable (3.35.7 is what CI pins)
+- [Flutter](https://docs.flutter.dev/get-started/install) stable (3.47.7 is what CI pins)
 - For iOS: Xcode, with an iPhone running a recent iOS
 - For Android: the Android SDK (`flutter doctor` lists what's missing)
 

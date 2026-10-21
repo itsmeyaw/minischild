@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-void main() => runApp(const MinischildApp());
+import 'app.dart';
+import 'transit_providers.dart';
+import 'universal_ble_device_link.dart';
 
-class MinischildApp extends StatelessWidget {
-  const MinischildApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Minischild',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Minischild')),
-        body: const Center(child: Text('Device setup is coming soon')),
-      ),
-    );
-  }
+void main() {
+  final client = http.Client();
+  runApp(
+    CompanionApp(
+      link: UniversalBleDeviceLink(),
+      providerFor: (name) => transitProviderFor(name, client),
+    ),
+  );
 }
