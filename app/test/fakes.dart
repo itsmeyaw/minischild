@@ -26,6 +26,7 @@ class FakeDeviceLink implements DeviceLink {
   Completer<void>? connectGate;
   final writes = <({Settings settings, String wifiPassword})>[];
   DeviceLinkException? writeError;
+  DeviceLinkException? readError;
 
   @override
   Stream<List<FoundDevice>> scan() {
@@ -49,7 +50,10 @@ class FakeDeviceLink implements DeviceLink {
   }
 
   @override
-  Future<Settings> readSettings() async => settings;
+  Future<Settings> readSettings() async {
+    if (readError case final error?) throw error;
+    return settings;
+  }
 
   @override
   Future<void> writeSettings(

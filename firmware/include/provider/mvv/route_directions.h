@@ -26,6 +26,12 @@ class RouteDirections {
     return *cache_;
   }
 
+  // Takes effect from the next get; a Station with no configured Route Directions looks up again.
+  void select(const std::vector<std::string>& configured) {
+    configured_ = configured;
+    cache_.reset();
+  }
+
  private:
   std::vector<std::string> configured_;
   std::function<RouteDirectionsResult()> lookup_;

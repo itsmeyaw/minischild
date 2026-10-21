@@ -13,11 +13,14 @@ class FakeProvider : public DepartureProvider {
  public:
   FetchResult result = DepartureBoard{};
   int fetches = 0;
+  BoardSelection selection;
 
   FetchResult fetch() override {
     fetches++;
     return result;
   }
+
+  void select(const BoardSelection& chosen) override { selection = chosen; }
 };
 
 class FakeView : public BoardView {
@@ -332,6 +335,54 @@ void test_stale_render_shows_only_departures_on_listed_platforms() {
   TEST_ASSERT_EQUAL_STRING("A", view.lastRoutes[0].c_str());
 }
 
+void test_select_within_the_same_minute_fetches_again() {
+  provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
+  BoardController controller(provider, view, clock_, {});
+  controller.tick();
+
+  controller.select(BoardSelection{"de:09162:2", {}, {}});
+  controller.tick();
+
+  TEST_ASSERT_EQUAL(2, provider.fetches);
+  TEST_ASSERT_EQUAL(2, view.renders);
+}
+
+void test_select_passes_the_station_and_route_directions_to_the_provider() {
+  BoardController controller(provider, view, clock_, {});
+
+  controller.select(BoardSelection{"de:09162:2", {"ID1", "ID2"}, {}});
+
+  TEST_ASSERT_EQUAL_STRING("de:09162:2", provider.selection.stationId.c_str());
+  TEST_ASSERT_EQUAL(2, provider.selection.routeDirectionIds.size());
+  TEST_ASSERT_EQUAL_STRING("ID2", provider.selection.routeDirectionIds[1].c_str());
+}
+
+void test_select_platforms_filter_the_next_render() {
+  Departure other = scheduledAt("B", NOON + 2 * 60);
+  other.platformCode = "2";
+  provider.result = boardWith({scheduledAt("A", NOON + 5 * 60), other});
+  BoardController controller(provider, view, clock_, {});
+
+  controller.select(BoardSelection{"de:09162:2", {}, {"2"}});
+  controller.tick();
+
+  TEST_ASSERT_EQUAL(1, view.lastRoutes.size());
+  TEST_ASSERT_EQUAL_STRING("B", view.lastRoutes[0].c_str());
+}
+
+void test_failed_fetch_after_select_shows_no_connection_not_the_old_board() {
+  provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
+  BoardController controller(provider, view, clock_, {});
+  controller.tick();
+
+  controller.select(BoardSelection{"de:09162:2", {}, {}});
+  provider.result = FetchError{"boom"};
+  controller.tick();
+
+  TEST_ASSERT_EQUAL(1, view.noConnections);
+  TEST_ASSERT_TRUE(view.lastWasNoConnection);
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_first_tick_fetches_and_renders_fresh_board_fully);
@@ -352,5 +403,9 @@ int main() {
   RUN_TEST(test_view_receives_only_as_many_departures_as_it_has_rows);
   RUN_TEST(test_fresh_render_shows_only_departures_on_listed_platforms);
   RUN_TEST(test_stale_render_shows_only_departures_on_listed_platforms);
+  RUN_TEST(test_select_within_the_same_minute_fetches_again);
+  RUN_TEST(test_select_passes_the_station_and_route_directions_to_the_provider);
+  RUN_TEST(test_select_platforms_filter_the_next_render);
+  RUN_TEST(test_failed_fetch_after_select_shows_no_connection_not_the_old_board);
   return UNITY_END();
 }

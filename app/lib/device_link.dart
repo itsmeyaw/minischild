@@ -26,9 +26,10 @@ abstract interface class DeviceLink {
   /// Reads `settings` from the connected Device. Throws DeviceLinkException(connectionFailed).
   Future<Settings> readSettings();
 
-  /// Writes [settings] to the connected Device, which then restarts. An empty
-  /// [wifiPassword] keeps the stored one. Throws FormatException, writing
-  /// nothing, if the document is over 512 bytes, else DeviceLinkException(connectionFailed).
+  /// Writes [settings] to the connected Device. It restarts, dropping the link,
+  /// only if the WiFi network or password changed. An empty [wifiPassword] keeps
+  /// the stored one. Throws FormatException, writing nothing, if the document is
+  /// over 512 bytes, else DeviceLinkException(connectionFailed).
   Future<void> writeSettings(Settings settings, {String wifiPassword = ''});
 
   /// Emits when the open link drops.

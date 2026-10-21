@@ -29,6 +29,9 @@ class _WifiScreenState extends State<WifiScreen> {
       widget.link,
       widget.settings.copyWith(wifiSsid: _ssid),
       wifiPassword: _password,
+      // A password equal to the stored one can't be seen here, so this may
+      // reconnect to a Device that didn't restart. It still works.
+      restarts: _ssid != widget.settings.wifiSsid || _password.isNotEmpty,
     );
     if (mounted) setState(() => _saving = false);
   }

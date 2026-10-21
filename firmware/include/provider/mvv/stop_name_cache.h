@@ -20,6 +20,8 @@ class StopNameCache {
     return cache_.value_or("");
   }
 
+  void reset() { cache_.reset(); }
+
  private:
   std::function<StopNameResult()> lookup_;
   std::optional<std::string> cache_;

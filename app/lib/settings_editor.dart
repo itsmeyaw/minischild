@@ -28,16 +28,24 @@ class SaveAction extends StatelessWidget {
   }
 }
 
+/// What a saved settings write did to the Device, popped by [writeSettingsAndClose].
+enum SettingsSaved { applied, restarting }
+
 Future<void> writeSettingsAndClose(
   BuildContext context,
   DeviceLink link,
   Settings settings, {
   String wifiPassword = '',
+  bool restarts = false,
 }) async {
   final String failure;
   try {
     await link.writeSettings(settings, wifiPassword: wifiPassword);
-    if (context.mounted) Navigator.of(context).pop(true);
+    if (context.mounted) {
+      Navigator.of(
+        context,
+      ).pop(restarts ? SettingsSaved.restarting : SettingsSaved.applied);
+    }
     return;
   } on FormatException {
     failure =
