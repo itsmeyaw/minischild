@@ -2,20 +2,14 @@
 
 #include <ArduinoJson.h>
 
-#include <algorithm>
 #include <ctime>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "provider/departure_provider.h"
+#include "provider/route_direction.h"
 #include "util/iso8601.h"
-
-// Route Direction ID: "<line name>|<destination station IBNR>", the destination empty when unknown.
-inline std::string bvgRouteDirectionId(const std::string& lineName,
-                                       const std::string& destinationId) {
-  return lineName + "|" + destinationId;
-}
 
 inline FetchResult toBvgDepartureBoard(JsonObjectConst root, time_t now,
                                        const std::vector<std::string>& routeDirectionIds) {
@@ -28,9 +22,8 @@ inline FetchResult toBvgDepartureBoard(JsonObjectConst root, time_t now,
   for (JsonObjectConst dep : root["departures"].as<JsonArrayConst>()) {
     if (dep["cancelled"] | false) continue;
     std::string lineName = dep["line"]["name"] | "";
-    std::string routeDirectionId = bvgRouteDirectionId(lineName, dep["destination"]["id"] | "");
-    if (!routeDirectionIds.empty() && std::find(routeDirectionIds.begin(), routeDirectionIds.end(),
-                                                routeDirectionId) == routeDirectionIds.end()) {
+    if (!isSelectedRouteDirection(routeDirectionIds,
+                                  routeDirectionId(lineName, dep["destination"]["id"] | ""))) {
       continue;
     }
     std::optional<time_t> planned = parseIso8601(dep["plannedWhen"] | "");
