@@ -168,6 +168,16 @@ void test_result_does_not_depend_on_the_process_time_zone() {
   TEST_ASSERT_EQUAL(1792598280, board.departures[0].departure->time);
 }
 
+void test_event_with_unparseable_planned_time_is_dropped() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(
+      R"json({"locations":[{"disassembledName":"Gleis"}],"stopEvents":[)json"
+      R"json({"departureTimePlanned":"soon","transportation":{"number":"S1"}},)json"
+      R"json({"departureTimePlanned":"2026-10-21T16:20:00Z","transportation":{"number":"S1"}}]})json",
+      NOW, {}));
+  TEST_ASSERT_EQUAL(1, board.departures.size());
+  TEST_ASSERT_EQUAL(1792599600, board.departures[0].scheduledDepartureTime);
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_stop_name_comes_from_the_disassembled_name_of_the_requested_stop);
@@ -189,5 +199,6 @@ int main() {
   RUN_TEST(test_empty_locations_is_an_unknown_station);
   RUN_TEST(test_malformed_json_is_a_fetch_error);
   RUN_TEST(test_result_does_not_depend_on_the_process_time_zone);
+  RUN_TEST(test_event_with_unparseable_planned_time_is_dropped);
   return UNITY_END();
 }
