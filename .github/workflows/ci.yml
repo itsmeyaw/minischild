@@ -44,3 +44,20 @@ jobs:
         run: |
           cp include/config.example.h include/config.h
           pio run -e esp32dev
+
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned: analyzer and lint results change between Flutter releases.
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.35.7
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
