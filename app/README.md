@@ -48,6 +48,8 @@ adb install build/app/outputs/flutter-apk/app-release.apk
 
 Without `adb`, copy `build/app/outputs/flutter-apk/app-release.apk` to the phone and allow installing unknown apps for the app that opens it.
 
+The release APK is signed with the local debug key, which is fine for sideloading but not for a store.
+
 ## Replace the icon
 
 The launcher icon is generated from `assets/icon/icon.png`. Replace that file with a 1024×1024 PNG, then regenerate the platform icons:
