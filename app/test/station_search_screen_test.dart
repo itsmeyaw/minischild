@@ -93,11 +93,10 @@ void main() {
     expect(find.text('The Device is restarting'), findsOneWidget);
     expect(find.text('Connection to the Device was lost'), findsNothing);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Back to Devices'));
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
     expect(find.text('The Device is restarting'), findsNothing);
-    expect(find.text('Looking for Devices…'), findsOneWidget);
+    expect(find.text('München, Marienplatz (Theatinerstraße)'), findsOneWidget);
   });
 
   testWidgets(
@@ -122,6 +121,8 @@ void main() {
       expect(write.settings.stationId, 'de:09162:2');
       expect(write.settings.routeDirectionIds, settings.routeDirectionIds);
       expect(write.settings.platforms, settings.platforms);
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump();
     },
   );
 

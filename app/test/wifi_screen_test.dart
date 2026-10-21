@@ -101,6 +101,9 @@ void main() {
     expect(write.settings.platforms, settings.platforms);
     expect(write.wifiPassword, 'correct horse');
     expect(find.text('The Device is restarting'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    expect(find.text('The Device is restarting'), findsNothing);
   });
 
   testWidgets('leaving the password empty keeps the stored one', (
@@ -114,6 +117,8 @@ void main() {
 
     expect(link.writes.single.settings.wifiSsid, 'office');
     expect(link.writes.single.wifiPassword, '');
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
   });
 
   testWidgets('an empty network name is refused and nothing is written', (
@@ -167,6 +172,9 @@ void main() {
 
       expect(link.writes.single.settings.wifiSsid, 'office');
       expect(find.text('The Device is restarting'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump();
+      expect(find.text('The Device is restarting'), findsNothing);
     },
   );
 

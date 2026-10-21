@@ -9,6 +9,9 @@ import 'status_message.dart';
 import 'transit_provider.dart';
 import 'wifi_screen.dart';
 
+const _restartDelay = Duration(seconds: 3);
+const _restartAttempts = 10;
+
 class DeviceScreen extends StatefulWidget {
   const DeviceScreen({
     super.key,
@@ -114,12 +117,28 @@ class _DeviceScreenState extends State<DeviceScreen> {
     final saved = await Navigator.of(
       context,
     ).push<bool>(MaterialPageRoute(builder: (_) => screen));
-    if (saved == true && mounted) {
-      setState(() => _connection = const _Restarting());
+    if (saved == true && mounted) await _restart();
+  }
+
+  Future<void> _restart() async {
+    setState(() => _connection = const _Restarting());
+    await widget.link.disconnect();
+    for (var attempt = 0; attempt < _restartAttempts; attempt++) {
+      await Future<void>.delayed(_restartDelay);
+      if (!mounted) return;
+      if (await _tryConnect()) return;
     }
+    if (mounted) setState(() => _connection = const _ConnectFailed());
   }
 
   Future<void> _connect() async {
+    final connected = await _tryConnect();
+    if (!connected && mounted) {
+      setState(() => _connection = const _ConnectFailed());
+    }
+  }
+
+  Future<bool> _tryConnect() async {
     try {
       final info = await widget.link.connect(widget.device);
       final settings = await widget.link.readSettings();
@@ -131,9 +150,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
           ),
         );
       }
+      return true;
     } catch (error) {
       debugPrint('Connecting to ${widget.device.name} failed: $error');
-      if (mounted) setState(() => _connection = const _ConnectFailed());
+      return false;
     }
   }
 
@@ -186,15 +206,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
         action: 'Reconnect',
       ),
       _Connected(:final details) => _loaded(details),
-      _Restarting() => StatusMessage(
-        icon: const Icon(Icons.restart_alt, size: 48),
+      _Restarting() => const StatusMessage(
+        icon: CircularProgressIndicator(),
         headline: 'The Device is restarting',
         message:
-            'It shows your changes in a moment. To change anything else, wait until it’s back in the Device list, then tap it again.',
-        action: FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Back to Devices'),
-        ),
+            'The app reconnects as soon as it’s back. This takes a few seconds.',
       ),
     };
   }

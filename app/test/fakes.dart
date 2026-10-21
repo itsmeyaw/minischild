@@ -16,7 +16,7 @@ class FakeDeviceLink implements DeviceLink {
   FakeDeviceLink({required this.info, required this.settings});
 
   final DeviceInfo info;
-  final Settings settings;
+  Settings settings;
   final _scans = <StreamController<List<FoundDevice>>>[];
   final _connectionLost = StreamController<void>.broadcast();
   int scanCount = 0;
@@ -57,6 +57,7 @@ class FakeDeviceLink implements DeviceLink {
     settings.encode(wifiPassword: wifiPassword);
     if (writeError case final error?) throw error;
     writes.add((settings: settings, wifiPassword: wifiPassword));
+    this.settings = settings;
   }
 
   @override
