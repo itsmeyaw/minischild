@@ -71,16 +71,21 @@ void loop() {
   // Runs between ticks, so no fetch's TLS buffers are live while the new settings are allocated.
   if (bleService->takeSettingsSaved()) {
     const Settings saved = settingsStore->load();
-    if (saved.wifiSsid != runningSettings.wifiSsid ||
-        saved.wifiPassword != runningSettings.wifiPassword) {
-      Serial.println("Restarting to join the new WiFi");
-      // Lets the write response reach the phone before the link drops.
-      delay(500);
-      ESP.restart();
+    switch (settingsChange(runningSettings, saved)) {
+      case SettingsChange::Wifi:
+        Serial.println("Restarting to join the new WiFi");
+        // Lets the write response reach the phone before the link drops.
+        delay(500);
+        ESP.restart();
+        break;
+      case SettingsChange::BoardSelection:
+        Serial.println("Applying the new Board Selection");
+        controller->select(saved.boardSelection);
+        runningSettings = saved;
+        break;
+      case SettingsChange::None:
+        break;
     }
-    Serial.println("Applying the new Board Selection");
-    controller->select(saved.boardSelection);
-    runningSettings = saved;
   }
   // The core's auto-reconnect gives up after some disconnect reasons, so retry here too.
   switch (watchdog.check(WiFi.status() == WL_CONNECTED, millis())) {
