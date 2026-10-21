@@ -13,10 +13,12 @@ Map<String, Object?> _decodeObject(List<int> bytes) {
   return json;
 }
 
-bool _isWifiSsid(String ssid) {
+bool isWifiSsid(String ssid) {
   final length = utf8.encode(ssid).length;
   return length >= 1 && length <= 32;
 }
+
+bool isWifiPassword(String password) => utf8.encode(password).length <= 64;
 
 class DeviceInfo {
   final String provider;
@@ -73,7 +75,7 @@ class Settings {
         'wifiSsid': String wifiSsid,
       }
           when stationId.isNotEmpty &&
-              _isWifiSsid(wifiSsid) &&
+              isWifiSsid(wifiSsid) &&
               routeDirectionIds.every((id) => id is String) &&
               platforms.every((platform) => platform is String) =>
         Settings(

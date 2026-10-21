@@ -104,7 +104,7 @@ void main() {
     expect(find.text('Unsupported provider'), findsOneWidget);
     expect(
       find.text(
-        'This app can’t show the Board Selection for the “bvg” provider. You can still see the WiFi network.',
+        'This app can’t show the Board Selection for the “bvg” provider. You can still change the WiFi network.',
       ),
       findsOneWidget,
     );

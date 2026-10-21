@@ -7,6 +7,7 @@ import 'device_link.dart';
 import 'station_search_screen.dart';
 import 'status_message.dart';
 import 'transit_provider.dart';
+import 'wifi_screen.dart';
 
 class DeviceScreen extends StatefulWidget {
   const DeviceScreen({
@@ -221,6 +222,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
         ListTile(
           title: const Text('WiFi network'),
           subtitle: Text(details.settings.wifiSsid),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () =>
+              _edit(WifiScreen(link: widget.link, settings: details.settings)),
         ),
         ListTile(
           title: const Text('Provider'),
@@ -242,7 +246,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
           leading: const Icon(Icons.info_outline),
           title: const Text('Unsupported provider'),
           subtitle: Text(
-            'This app can’t show the Board Selection for the “${details.info.provider}” provider. You can still see the WiFi network.',
+            'This app can’t show the Board Selection for the “${details.info.provider}” provider. You can still change the WiFi network.',
           ),
         ),
       ],
