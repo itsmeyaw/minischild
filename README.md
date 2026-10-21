@@ -24,6 +24,7 @@ The firmware is a PlatformIO project in `firmware/`; run every `pio` command bel
 
 1. Copy `firmware/include/config.example.h` to `firmware/include/config.h`, then fill in:
    - WiFi SSID and password
+   - the BLE passkey, which you enter when pairing a phone (see [Changing settings over BLE](#changing-settings-over-ble))
    - the Station ID and, optionally, the Route Direction IDs and Platforms to show (leave a list empty to show everything of that kind)
    - the e-paper pin wiring, if it differs from the default
 
@@ -51,6 +52,10 @@ VIEW=epaper_42 PROVIDER=gtfs pio run -e esp32dev   # swap both
 ```
 
 A name is a folder under `firmware/src/view/` or `firmware/src/provider/`; a name with no matching folder stops the build and lists the available ones. Put any settings the chosen view or provider needs in `config.h`.
+
+### Changing settings over BLE
+
+The Device advertises as `Minischild-XXXX` at all times. Pair with a generic BLE tool such as nRF Connect, entering `BLE_PASSKEY` from `config.h`. Read and write the `settings` characteristic as JSON as described in [`docs/ble-protocol.md`](docs/ble-protocol.md). A valid write is saved and the Device restarts. The serial log prints the minimum free heap whenever it reaches a new low.
 
 ## Extending
 
@@ -89,6 +94,7 @@ GLOSSARY.md                       domain language, shared by every folder
 ## Further reading
 
 - [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebase
+- [`docs/ble-protocol.md`](docs/ble-protocol.md) — the BLE contract between the Device and the Companion App
 - [`app/README.md`](app/README.md) — the Companion App: running, checks and sideloading
 - Each provider's `README.md` inside [`firmware/include/provider/`](firmware/include/provider)
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — principles the code follows

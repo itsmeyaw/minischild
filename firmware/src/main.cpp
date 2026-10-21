@@ -4,6 +4,7 @@
 #include <ctime>
 #include <optional>
 
+#include "ble/settings_service.h"
 #include "board/board_controller.h"
 #include "board/clock.h"
 #include "board/connection_watchdog.h"
@@ -11,6 +12,8 @@
 #include "settings/nvs_settings_backend.h"
 #include "settings/settings_store.h"
 #include "setup.h"
+
+static_assert(BLE_PASSKEY <= 999999, "BLE_PASSKEY must have at most 6 digits");
 
 namespace {
 bool connectWifi(const std::string& ssid, const std::string& password) {
@@ -39,6 +42,7 @@ SystemClock systemClock;
 NvsSettingsBackend settingsBackend;
 std::optional<SettingsStore> settingsStore;
 std::optional<BoardController> controller;
+std::optional<BleSettingsService> bleService;
 ConnectionWatchdog watchdog;
 }  // namespace
 
@@ -48,6 +52,9 @@ void setup() {
       settingsBackend,
       Settings{{STATION_ID, ROUTE_DIRECTION_IDS, PLATFORMS}, WIFI_SSID, WIFI_PASSWORD});
   const Settings settings = settingsStore->load();
+  // Before WiFi, so a Device with the wrong WiFi can still be reconfigured over BLE.
+  bleService.emplace(*settingsStore, encodeInfo(PROVIDER_NAME, FIRMWARE_VERSION), BLE_PASSKEY);
+  bleService->begin();
   BoardView& view = setupBoardView();
   DepartureProvider& provider = setupDepartureProvider(settings.boardSelection);
   // Both run even on failure: the watchdog retries WiFi and SNTP keeps polling, so fetches recover.
@@ -59,6 +66,12 @@ void setup() {
 }
 
 void loop() {
+  // Lets the write response reach the phone before the link drops.
+  if (bleService->restartRequested()) {
+    Serial.println("Restarting to apply settings");
+    delay(500);
+    ESP.restart();
+  }
   // The core's auto-reconnect gives up after some disconnect reasons, so retry here too.
   switch (watchdog.check(WiFi.status() == WL_CONNECTED, millis())) {
     case WatchdogAction::Reconnect:
