@@ -109,6 +109,13 @@ void test_no_departures_gives_an_empty_board() {
   TEST_ASSERT_TRUE(board.departures.empty());
 }
 
+void test_missing_departures_is_a_fetch_error() {
+  FetchResult result = parseBvgDepartures(R"({})", NOW, {});
+  const FetchError* error = std::get_if<FetchError>(&result);
+  TEST_ASSERT_NOT_NULL(error);
+  TEST_ASSERT_EQUAL_STRING("BVG: no departures", error->message.c_str());
+}
+
 void test_route_direction_id_joins_line_and_destination() {
   TEST_ASSERT_EQUAL_STRING("U2|900130002", bvgRouteDirectionId("U2", "900130002").c_str());
 }
@@ -160,6 +167,7 @@ int main() {
   RUN_TEST(test_malformed_json_is_a_fetch_error);
   RUN_TEST(test_message_field_is_a_fetch_error);
   RUN_TEST(test_no_departures_gives_an_empty_board);
+  RUN_TEST(test_missing_departures_is_a_fetch_error);
   RUN_TEST(test_route_direction_id_joins_line_and_destination);
   RUN_TEST(test_route_direction_id_has_empty_destination_when_unknown);
   RUN_TEST(test_empty_route_directions_keep_every_departure);

@@ -23,6 +23,7 @@ inline FetchResult toBvgDepartureBoard(JsonObjectConst root, time_t now,
   board.timestamp = now;
   const char* message = root["message"] | "";
   if (*message) return FetchError{std::string("BVG: ") + message};
+  if (!root["departures"].is<JsonArrayConst>()) return FetchError{"BVG: no departures"};
   board.stopName = root["departures"][0]["stop"]["name"] | "";
   for (JsonObjectConst dep : root["departures"].as<JsonArrayConst>()) {
     if (dep["cancelled"] | false) continue;
