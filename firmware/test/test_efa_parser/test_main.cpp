@@ -120,6 +120,54 @@ void test_bus_route_direction_uses_the_number_as_route_name() {
   TEST_ASSERT_EQUAL_STRING("Bussteig 4", board.departures[0].platformCode.c_str());
 }
 
+void test_stop_name_falls_back_to_the_station_name() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(
+      R"json({"locations":[{"name":"Stuttgart, Hauptbahnhof (tief)","disassembledName":null}]})json",
+      NOW, {}));
+  TEST_ASSERT_EQUAL_STRING("Stuttgart, Hauptbahnhof (tief)", board.stopName.c_str());
+  TEST_ASSERT_TRUE(board.departures.empty());
+}
+
+void test_station_without_stop_events_gives_an_empty_board() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(
+      R"({"version":"10.6","systemMessages":[],"locations":[{"disassembledName":"Gleis"}]})", NOW,
+      {}));
+  TEST_ASSERT_EQUAL_STRING("Gleis", board.stopName.c_str());
+  TEST_ASSERT_TRUE(board.departures.empty());
+}
+
+void test_empty_locations_is_an_unknown_station() {
+  FetchResult result =
+      parseEfaDepartures(R"({"version":"10.6.18.31","systemMessages":[],"locations":[]})", NOW, {});
+  const FetchError* error = std::get_if<FetchError>(&result);
+  TEST_ASSERT_NOT_NULL(error);
+  TEST_ASSERT_EQUAL_STRING("EFA: unknown Station", error->message.c_str());
+}
+
+void test_malformed_json_is_a_fetch_error() {
+  FetchResult result = parseEfaDepartures(std::string(R"({"locations":)"), NOW, {});
+  const FetchError* error = std::get_if<FetchError>(&result);
+  TEST_ASSERT_NOT_NULL(error);
+  TEST_ASSERT_NOT_NULL(strstr(error->message.c_str(), "EFA JSON"));
+}
+
+void test_result_does_not_depend_on_the_process_time_zone() {
+  const char* previous = getenv("TZ");
+  std::string saved = previous ? previous : "";
+  setenv("TZ", "Asia/Tokyo", 1);
+  tzset();
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {}));
+  if (previous) {
+    setenv("TZ", saved.c_str(), 1);
+  } else {
+    unsetenv("TZ");
+  }
+  tzset();
+  TEST_ASSERT_EQUAL(NOW, board.timestamp);
+  TEST_ASSERT_EQUAL(1792598280, board.departures[0].scheduledDepartureTime);
+  TEST_ASSERT_EQUAL(1792598280, board.departures[0].departure->time);
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_stop_name_comes_from_the_disassembled_name_of_the_requested_stop);
@@ -136,5 +184,10 @@ int main() {
   RUN_TEST(test_keeps_departures_of_every_chosen_route_direction);
   RUN_TEST(test_route_direction_match_is_exact);
   RUN_TEST(test_bus_route_direction_uses_the_number_as_route_name);
+  RUN_TEST(test_stop_name_falls_back_to_the_station_name);
+  RUN_TEST(test_station_without_stop_events_gives_an_empty_board);
+  RUN_TEST(test_empty_locations_is_an_unknown_station);
+  RUN_TEST(test_malformed_json_is_a_fetch_error);
+  RUN_TEST(test_result_does_not_depend_on_the_process_time_zone);
   return UNITY_END();
 }

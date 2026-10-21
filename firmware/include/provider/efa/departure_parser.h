@@ -26,6 +26,7 @@ inline FetchResult toEfaDepartureBoard(JsonObjectConst root, time_t now,
   DepartureBoard board;
   board.timestamp = now;
   JsonObjectConst station = root["locations"][0];
+  if (station.isNull()) return FetchError{"EFA: unknown Station"};
   board.stopName = station["disassembledName"] | (station["name"] | "");
   for (JsonObjectConst e : root["stopEvents"].as<JsonArrayConst>()) {
     if (isCancelled(e["realtimeStatus"].as<JsonArrayConst>())) continue;
