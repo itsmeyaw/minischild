@@ -88,6 +88,13 @@ void test_departure_without_platform_is_hidden_when_platforms_are_listed() {
   TEST_ASSERT_EQUAL(0, sorted.size());
 }
 
+void test_departure_without_platform_is_hidden_even_when_an_empty_platform_is_listed() {
+  Departure a = scheduledAt("A", NOON + 60);
+  a.platformCode = "";
+  std::vector<Departure> sorted = selectDepartures({a}, {""}, NOON, 5);
+  TEST_ASSERT_EQUAL(0, sorted.size());
+}
+
 void test_platform_filter_applies_before_the_limit() {
   Departure a = scheduledAt("A", NOON + 1 * 60);
   a.platformCode = "2";
@@ -112,6 +119,7 @@ int main() {
   RUN_TEST(test_keeps_only_departures_on_listed_platforms);
   RUN_TEST(test_empty_platform_list_keeps_departures_on_every_platform);
   RUN_TEST(test_departure_without_platform_is_hidden_when_platforms_are_listed);
+  RUN_TEST(test_departure_without_platform_is_hidden_even_when_an_empty_platform_is_listed);
   RUN_TEST(test_platform_filter_applies_before_the_limit);
   return UNITY_END();
 }

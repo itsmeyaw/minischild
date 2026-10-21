@@ -2,8 +2,10 @@
 
 #include <ctime>
 #include <optional>
+#include <string>
 #include <utility>
 #include <variant>
+#include <vector>
 
 #include "board/board_selection.h"
 #include "board/clock.h"

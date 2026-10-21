@@ -26,7 +26,8 @@ inline std::vector<Departure> selectDepartures(const std::vector<Departure>& dep
   for (const Departure& d : departures) {
     if (departureTime(d) < currentMinute) continue;
     if (!platforms.empty() &&
-        std::find(platforms.begin(), platforms.end(), d.platformCode) == platforms.end()) {
+        (d.platformCode.empty() ||
+         std::find(platforms.begin(), platforms.end(), d.platformCode) == platforms.end())) {
       continue;
     }
     upcoming.push_back(&d);
