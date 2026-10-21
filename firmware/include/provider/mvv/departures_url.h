@@ -64,3 +64,10 @@ inline std::string mvvDeparturesUrl(const std::string& stationId,
 inline std::string mvvAvailableLinesUrl(const std::string& stationId) {
   return mvv_url_detail::stationUrl("available_lines", stationId);
 }
+
+// URL of the MVV stop finder, which resolves a Station ID to its Location.
+inline std::string mvvStopFinderUrl(const std::string& stationId) {
+  return "https://efa.mvv-muenchen.de/ng/XML_STOPFINDER_REQUEST?outputFormat=rapidJSON"
+         "&type_sf=stop&name_sf=" +
+         mvv_url_detail::percentEncode(stationId);
+}

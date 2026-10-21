@@ -59,6 +59,13 @@ void test_builds_the_available_lines_url_for_a_station() {
       mvvAvailableLinesUrl("de:09162:2").c_str());
 }
 
+void test_builds_the_stop_finder_url_for_a_station() {
+  TEST_ASSERT_EQUAL_STRING(
+      "https://efa.mvv-muenchen.de/ng/XML_STOPFINDER_REQUEST?outputFormat=rapidJSON"
+      "&type_sf=stop&name_sf=de%3A09162%3A2",
+      mvvStopFinderUrl("de:09162:2").c_str());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_builds_the_url_for_two_route_directions);
@@ -66,5 +73,6 @@ int main() {
   RUN_TEST(test_pads_base64_with_a_single_equals_sign);
   RUN_TEST(test_percent_encodes_base64_plus);
   RUN_TEST(test_builds_the_available_lines_url_for_a_station);
+  RUN_TEST(test_builds_the_stop_finder_url_for_a_station);
   return UNITY_END();
 }
