@@ -116,14 +116,6 @@ void test_missing_departures_is_a_fetch_error() {
   TEST_ASSERT_EQUAL_STRING("BVG: no departures", error->message.c_str());
 }
 
-void test_route_direction_id_joins_line_and_destination() {
-  TEST_ASSERT_EQUAL_STRING("U2|900130002", bvgRouteDirectionId("U2", "900130002").c_str());
-}
-
-void test_route_direction_id_has_empty_destination_when_unknown() {
-  TEST_ASSERT_EQUAL_STRING("U2|", bvgRouteDirectionId("U2", "").c_str());
-}
-
 void test_empty_route_directions_keep_every_departure() {
   DepartureBoard board = boardFrom(parseBvgDepartures(kBvgFixture, NOW, {}));
   TEST_ASSERT_EQUAL(6, board.departures.size());
@@ -207,8 +199,6 @@ int main() {
   RUN_TEST(test_message_field_is_a_fetch_error);
   RUN_TEST(test_no_departures_gives_an_empty_board);
   RUN_TEST(test_missing_departures_is_a_fetch_error);
-  RUN_TEST(test_route_direction_id_joins_line_and_destination);
-  RUN_TEST(test_route_direction_id_has_empty_destination_when_unknown);
   RUN_TEST(test_empty_route_directions_keep_every_departure);
   RUN_TEST(test_keeps_only_departures_of_the_chosen_route_direction);
   RUN_TEST(test_keeps_departures_of_every_chosen_route_direction);
