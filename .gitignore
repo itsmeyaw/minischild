@@ -1,3 +1,3 @@
 .pio/
-include/config.h
+firmware/include/config.h
 .worktrees/
