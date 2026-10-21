@@ -31,6 +31,10 @@ inline FetchResult toEfaDepartureBoard(JsonObjectConst root, time_t now,
     if (isCancelled(e["realtimeStatus"].as<JsonArrayConst>())) continue;
     JsonObjectConst transportation = e["transportation"];
     std::string line = transportation["disassembledName"] | (transportation["number"] | "");
+    if (!isSelectedRouteDirection(
+            routeDirectionIds, routeDirectionId(line, transportation["destination"]["id"] | ""))) {
+      continue;
+    }
     std::optional<time_t> planned = parseIso8601(e["departureTimePlanned"] | "");
     if (!planned) continue;
     JsonObjectConst props = e["location"]["properties"];

@@ -91,6 +91,35 @@ void test_cancelled_departures_are_dropped() {
   }
 }
 
+void test_empty_route_directions_keep_every_departure() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {}));
+  TEST_ASSERT_EQUAL(6, board.departures.size());
+}
+
+void test_keeps_only_departures_of_the_chosen_route_direction() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {"S1|5006051"}));
+  TEST_ASSERT_EQUAL(2, board.departures.size());
+  TEST_ASSERT_EQUAL_STRING("Kirchheim(Teck)", board.departures[0].tripHeadsign.c_str());
+  TEST_ASSERT_EQUAL_STRING("Kirchheim(Teck)", board.departures[1].tripHeadsign.c_str());
+}
+
+void test_keeps_departures_of_every_chosen_route_direction() {
+  DepartureBoard board =
+      boardFrom(parseEfaDepartures(kEfaFixture, NOW, {"S1|5006051", "S1|5006053"}));
+  TEST_ASSERT_EQUAL(3, board.departures.size());
+}
+
+void test_route_direction_match_is_exact() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {"S1"}));
+  TEST_ASSERT_TRUE(board.departures.empty());
+}
+
+void test_bus_route_direction_uses_the_number_as_route_name() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {"127|6000301"}));
+  TEST_ASSERT_EQUAL(1, board.departures.size());
+  TEST_ASSERT_EQUAL_STRING("Bussteig 4", board.departures[0].platformCode.c_str());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_stop_name_comes_from_the_disassembled_name_of_the_requested_stop);
@@ -102,5 +131,10 @@ int main() {
   RUN_TEST(test_platform_falls_back_to_the_platform_property);
   RUN_TEST(test_bus_without_disassembled_name_uses_the_number_as_route_name);
   RUN_TEST(test_cancelled_departures_are_dropped);
+  RUN_TEST(test_empty_route_directions_keep_every_departure);
+  RUN_TEST(test_keeps_only_departures_of_the_chosen_route_direction);
+  RUN_TEST(test_keeps_departures_of_every_chosen_route_direction);
+  RUN_TEST(test_route_direction_match_is_exact);
+  RUN_TEST(test_bus_route_direction_uses_the_number_as_route_name);
   return UNITY_END();
 }
