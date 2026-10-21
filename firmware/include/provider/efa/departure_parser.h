@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 
+#include <cstring>
 #include <ctime>
 #include <optional>
 #include <string>
@@ -11,6 +12,15 @@
 #include "provider/route_direction.h"
 #include "util/iso8601.h"
 
+// Any realtimeStatus naming a cancellation (TRIP_CANCELLED in the verified responses) drops the
+// event.
+inline bool isCancelled(JsonArrayConst realtimeStatus) {
+  for (JsonVariantConst status : realtimeStatus) {
+    if (strstr(status | "", "CANCELLED")) return true;
+  }
+  return false;
+}
+
 inline FetchResult toEfaDepartureBoard(JsonObjectConst root, time_t now,
                                        const std::vector<std::string>& routeDirectionIds) {
   DepartureBoard board;
@@ -18,6 +28,7 @@ inline FetchResult toEfaDepartureBoard(JsonObjectConst root, time_t now,
   JsonObjectConst station = root["locations"][0];
   board.stopName = station["disassembledName"] | (station["name"] | "");
   for (JsonObjectConst e : root["stopEvents"].as<JsonArrayConst>()) {
+    if (isCancelled(e["realtimeStatus"].as<JsonArrayConst>())) continue;
     JsonObjectConst transportation = e["transportation"];
     std::string line = transportation["disassembledName"] | (transportation["number"] | "");
     std::optional<time_t> planned = parseIso8601(e["departureTimePlanned"] | "");
@@ -49,6 +60,7 @@ FetchResult parseEfaDepartures(TInput&& input, time_t now,
   filter["locations"][0]["disassembledName"] = true;
   filter["stopEvents"][0]["departureTimePlanned"] = true;
   filter["stopEvents"][0]["departureTimeEstimated"] = true;
+  filter["stopEvents"][0]["realtimeStatus"] = true;
   filter["stopEvents"][0]["location"]["properties"]["platformName"] = true;
   filter["stopEvents"][0]["location"]["properties"]["plannedPlatformName"] = true;
   filter["stopEvents"][0]["location"]["properties"]["platform"] = true;

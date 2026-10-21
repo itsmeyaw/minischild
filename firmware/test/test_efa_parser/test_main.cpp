@@ -73,6 +73,24 @@ void test_null_estimate_is_no_data_without_event() {
   TEST_ASSERT_FALSE(d.departure.has_value());
 }
 
+void test_platform_falls_back_to_the_platform_property() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {}));
+  TEST_ASSERT_EQUAL_STRING("2", board.departures[1].platformCode.c_str());
+}
+
+void test_bus_without_disassembled_name_uses_the_number_as_route_name() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {}));
+  TEST_ASSERT_EQUAL_STRING("127", board.departures[4].routeShortName.c_str());
+}
+
+void test_cancelled_departures_are_dropped() {
+  DepartureBoard board = boardFrom(parseEfaDepartures(kEfaFixture, NOW, {}));
+  TEST_ASSERT_EQUAL(6, board.departures.size());
+  for (const Departure& d : board.departures) {
+    TEST_ASSERT_NOT_EQUAL(1792599600, d.scheduledDepartureTime);
+  }
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_stop_name_comes_from_the_disassembled_name_of_the_requested_stop);
@@ -81,5 +99,8 @@ int main() {
   RUN_TEST(test_delayed_departure_has_predicted_time_and_positive_delay);
   RUN_TEST(test_early_departure_has_negative_delay);
   RUN_TEST(test_null_estimate_is_no_data_without_event);
+  RUN_TEST(test_platform_falls_back_to_the_platform_property);
+  RUN_TEST(test_bus_without_disassembled_name_uses_the_number_as_route_name);
+  RUN_TEST(test_cancelled_departures_are_dropped);
   return UNITY_END();
 }
