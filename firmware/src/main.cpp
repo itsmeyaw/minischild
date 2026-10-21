@@ -44,6 +44,7 @@ std::optional<SettingsStore> settingsStore;
 std::optional<BoardController> controller;
 std::optional<BleSettingsService> bleService;
 ConnectionWatchdog watchdog;
+uint32_t lowestMinFreeHeap = UINT32_MAX;
 }  // namespace
 
 void setup() {
@@ -90,6 +91,12 @@ void loop() {
     Serial.printf("%s (free heap %u, largest block %u)\n", error->message.c_str(),
                   static_cast<unsigned>(ESP.getFreeHeap()),
                   static_cast<unsigned>(ESP.getMaxAllocHeap()));
+  }
+  // BLE shares the heap with TLS; a new low tells whether the budget in ADR 0006 holds.
+  const uint32_t minFreeHeap = ESP.getMinFreeHeap();
+  if (minFreeHeap < lowestMinFreeHeap) {
+    lowestMinFreeHeap = minFreeHeap;
+    Serial.printf("Minimum free heap %u\n", static_cast<unsigned>(minFreeHeap));
   }
   delay(1000);
 }
