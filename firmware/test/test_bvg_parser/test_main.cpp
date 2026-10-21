@@ -154,6 +154,45 @@ void test_route_direction_match_is_exact() {
   TEST_ASSERT_TRUE(board.departures.empty());
 }
 
+void test_stop_name_is_kept_when_the_first_departure_is_cancelled() {
+  DepartureBoard board = boardFrom(parseBvgDepartures(
+      R"({"departures":[{"cancelled":true,"stop":{"name":"Stop A"},"line":{"name":"U5"},)"
+      R"("plannedWhen":"2026-10-21T18:20:00+02:00"},)"
+      R"({"stop":{"name":"Stop A"},"line":{"name":"U5"},)"
+      R"("plannedWhen":"2026-10-21T18:25:00+02:00"}]})",
+      NOW, {}));
+  TEST_ASSERT_EQUAL_STRING("Stop A", board.stopName.c_str());
+  TEST_ASSERT_EQUAL(1, board.departures.size());
+}
+
+void test_delay_without_when_is_no_data() {
+  DepartureBoard board = boardFrom(parseBvgDepartures(
+      R"({"departures":[{"stop":{"name":"Stop A"},"line":{"name":"U5"},"delay":60,"when":null,)"
+      R"("plannedWhen":"2026-10-21T18:20:00+02:00"}]})",
+      NOW, {}));
+  TEST_ASSERT_EQUAL(1, board.departures.size());
+  const Departure& d = board.departures[0];
+  TEST_ASSERT_EQUAL(ScheduleRelationship::NoData, d.scheduleRelationship);
+  TEST_ASSERT_FALSE(d.departure.has_value());
+}
+
+void test_null_line_has_an_empty_route_short_name() {
+  DepartureBoard board =
+      boardFrom(parseBvgDepartures(R"({"departures":[{"line":null,"direction":"Hauptbahnhof",)"
+                                   R"("plannedWhen":"2026-10-21T18:20:00+02:00"}]})",
+                                   NOW, {}));
+  TEST_ASSERT_EQUAL(1, board.departures.size());
+  TEST_ASSERT_EQUAL_STRING("", board.departures[0].routeShortName.c_str());
+}
+
+void test_null_line_is_excluded_by_a_route_direction_filter() {
+  DepartureBoard board =
+      boardFrom(parseBvgDepartures(R"({"departures":[{"line":null,"direction":"Hauptbahnhof",)"
+                                   R"("plannedWhen":"2026-10-21T18:20:00+02:00"}]})",
+                                   NOW, {"U5|"}));
+  TEST_ASSERT_TRUE(board.departures.empty());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_maps_route_headsign_platform_and_station);
@@ -175,5 +214,9 @@ int main() {
   RUN_TEST(test_keeps_departures_of_every_chosen_route_direction);
   RUN_TEST(test_departure_without_destination_matches_the_empty_destination_id);
   RUN_TEST(test_route_direction_match_is_exact);
+  RUN_TEST(test_stop_name_is_kept_when_the_first_departure_is_cancelled);
+  RUN_TEST(test_delay_without_when_is_no_data);
+  RUN_TEST(test_null_line_has_an_empty_route_short_name);
+  RUN_TEST(test_null_line_is_excluded_by_a_route_direction_filter);
   return UNITY_END();
 }
