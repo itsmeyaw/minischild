@@ -76,12 +76,14 @@ class FakeTransitProvider implements TransitProvider {
 
   final List<Station> stationResults;
   final List<RouteDirection> routeResults;
-  final Object? error;
+  Object? error;
   int calls = 0;
+  final queries = <String>[];
 
   @override
   Future<List<Station>> searchStations(String query) async {
     calls++;
+    queries.add(query);
     if (error case final error?) throw error;
     return stationResults;
   }

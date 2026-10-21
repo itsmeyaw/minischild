@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'ble_protocol.dart';
 import 'device_link.dart';
+import 'station_search_screen.dart';
 import 'status_message.dart';
 import 'transit_provider.dart';
 
@@ -43,6 +44,10 @@ class _Connected extends _Connection {
   const _Connected(this.details);
 
   final _DeviceDetails details;
+}
+
+class _Restarting extends _Connection {
+  const _Restarting();
 }
 
 sealed class _Names {
@@ -102,6 +107,15 @@ class _DeviceScreenState extends State<DeviceScreen> {
     setState(() => _connection = const _Connecting());
     await widget.link.disconnect();
     await _connect();
+  }
+
+  Future<void> _edit(Widget screen) async {
+    final saved = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => screen));
+    if (saved == true && mounted) {
+      setState(() => _connection = const _Restarting());
+    }
   }
 
   Future<void> _connect() async {
@@ -171,6 +185,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
         action: 'Reconnect',
       ),
       _Connected(:final details) => _loaded(details),
+      _Restarting() => StatusMessage(
+        icon: const Icon(Icons.restart_alt, size: 48),
+        headline: 'The Device is restarting',
+        message:
+            'It shows your changes in a moment. To change anything else, wait until it’s back in the Device list, then tap it again.',
+        action: FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Back to Devices'),
+        ),
+      ),
     };
   }
 
@@ -188,10 +212,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Widget _loaded(_DeviceDetails details) {
+    final provider = widget.providerFor(details.info.provider);
     return ListView(
       children: [
         const _SectionHeader('Board Selection'),
-        ..._selection(details),
+        ..._selection(details, provider),
         const _SectionHeader('Device'),
         ListTile(
           title: const Text('WiFi network'),
@@ -209,7 +234,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
     );
   }
 
-  List<Widget> _selection(_DeviceDetails details) {
+  List<Widget> _selection(_DeviceDetails details, TransitProvider? provider) {
     final settings = details.settings;
     return switch (details.names) {
       _UnsupportedProvider() => [
@@ -229,10 +254,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
-        ..._stationAndRoutes(settings, null, const {}),
+        ..._stationAndRoutes(settings, provider, null, const {}),
       ],
       _NamesFound(:final stationName, :final routeLabels) => _stationAndRoutes(
         settings,
+        provider,
         stationName,
         routeLabels,
       ),
@@ -241,6 +267,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   List<Widget> _stationAndRoutes(
     Settings settings,
+    TransitProvider? provider,
     String? stationName,
     Map<String, String> routeLabels,
   ) {
@@ -248,6 +275,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
       ListTile(
         title: Text(stationName ?? settings.stationId),
         subtitle: const Text('Station'),
+        trailing: provider == null ? null : const Icon(Icons.chevron_right),
+        onTap: provider == null
+            ? null
+            : () => _edit(
+                StationSearchScreen(
+                  provider: provider,
+                  link: widget.link,
+                  settings: settings,
+                ),
+              ),
       ),
       const _SectionHeader('Route Directions'),
       if (settings.routeDirectionIds.isEmpty)

@@ -50,6 +50,20 @@ class Settings {
     required this.wifiSsid,
   });
 
+  Settings copyWith({
+    String? stationId,
+    List<String>? routeDirectionIds,
+    List<String>? platforms,
+    String? wifiSsid,
+  }) {
+    return Settings(
+      stationId: stationId ?? this.stationId,
+      routeDirectionIds: routeDirectionIds ?? this.routeDirectionIds,
+      platforms: platforms ?? this.platforms,
+      wifiSsid: wifiSsid ?? this.wifiSsid,
+    );
+  }
+
   factory Settings.decode(List<int> bytes) {
     return switch (_decodeObject(bytes)) {
       {
