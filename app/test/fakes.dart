@@ -23,6 +23,8 @@ class FakeDeviceLink implements DeviceLink {
   int connectCount = 0;
   int disconnectCount = 0;
   DeviceLinkException? connectError;
+  final writes = <({Settings settings, String wifiPassword})>[];
+  DeviceLinkException? writeError;
 
   @override
   Stream<List<FoundDevice>> scan() {
@@ -46,6 +48,15 @@ class FakeDeviceLink implements DeviceLink {
 
   @override
   Future<Settings> readSettings() async => settings;
+
+  @override
+  Future<void> writeSettings(
+    Settings settings, {
+    String wifiPassword = '',
+  }) async {
+    if (writeError case final error?) throw error;
+    writes.add((settings: settings, wifiPassword: wifiPassword));
+  }
 
   @override
   Stream<void> get connectionLost => _connectionLost.stream;

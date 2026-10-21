@@ -71,4 +71,16 @@ class Settings {
       _ => throw const FormatException('settings are invalid'),
     };
   }
+
+  List<int> encode({String wifiPassword = ''}) {
+    return utf8.encode(
+      jsonEncode({
+        'stationId': stationId,
+        'routeDirectionIds': routeDirectionIds,
+        'platforms': platforms,
+        'wifiSsid': wifiSsid,
+        if (wifiPassword.isNotEmpty) 'wifiPassword': wifiPassword,
+      }),
+    );
+  }
 }
