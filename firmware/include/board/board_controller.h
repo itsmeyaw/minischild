@@ -48,6 +48,17 @@ class BoardController {
     return error ? std::optional<FetchError>(*error) : std::nullopt;
   }
 
+  // Shows the new Board Selection from the next tick on, fetching it even within the same minute.
+  // Call between ticks, from loop(), so the new Platforms are allocated while no fetch's TLS
+  // buffers are live.
+  void select(const BoardSelection& selection) {
+    provider_.select(selection);
+    platforms_ = selection.platforms;
+    lastFetchAt_.reset();
+    lastGood_.reset();
+    lastGoodAt_ = 0;
+  }
+
  private:
   DepartureProvider& provider_;
   BoardView& view_;
