@@ -61,43 +61,43 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('choosing a Station by search saves it and the Device restarts', (
-    tester,
-  ) async {
-    final link = await openDevice(tester);
-    await openStationSearch(tester);
+  testWidgets(
+    'choosing a Station by search saves it and the Device keeps the connection',
+    (tester) async {
+      final link = await openDevice(tester);
+      await openStationSearch(tester);
 
-    await search(tester, 'Marienpl');
-    expect(find.text('München, Marienplatz (Theatinerstraße)'), findsOneWidget);
-    expect(_saveButton(tester).onPressed, isNull);
+      await search(tester, 'Marienpl');
+      expect(
+        find.text('München, Marienplatz (Theatinerstraße)'),
+        findsOneWidget,
+      );
+      expect(_saveButton(tester).onPressed, isNull);
 
-    await tester.tap(find.text('München, Marienplatz (Theatinerstraße)'));
-    await tester.pump();
-    expect(_saveButton(tester).onPressed, isNotNull);
+      await tester.tap(find.text('München, Marienplatz (Theatinerstraße)'));
+      await tester.pump();
+      expect(_saveButton(tester).onPressed, isNotNull);
 
-    await tester.tap(find.text('Save'));
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.text('Save'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
 
-    expect(link.writes, hasLength(1));
-    final write = link.writes.single;
-    expect(write.settings.stationId, 'de:09162:20');
-    expect(write.settings.routeDirectionIds, isEmpty);
-    expect(write.settings.platforms, isEmpty);
-    expect(write.settings.wifiSsid, settings.wifiSsid);
-    expect(write.wifiPassword, '');
-    expect(find.text('The Device is restarting'), findsOneWidget);
-
-    link.loseConnection();
-    await tester.pump();
-    expect(find.text('The Device is restarting'), findsOneWidget);
-    expect(find.text('Connection to the Device was lost'), findsNothing);
-
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pump();
-    expect(find.text('The Device is restarting'), findsNothing);
-    expect(find.text('München, Marienplatz (Theatinerstraße)'), findsOneWidget);
-  });
+      expect(link.writes, hasLength(1));
+      final write = link.writes.single;
+      expect(write.settings.stationId, 'de:09162:20');
+      expect(write.settings.routeDirectionIds, isEmpty);
+      expect(write.settings.platforms, isEmpty);
+      expect(write.settings.wifiSsid, settings.wifiSsid);
+      expect(write.wifiPassword, '');
+      expect(find.text('The Device is restarting'), findsNothing);
+      expect(link.connectCount, 1);
+      expect(link.disconnectCount, 0);
+      expect(
+        find.text('München, Marienplatz (Theatinerstraße)'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets(
     'choosing the current Station again keeps its Routes and Platforms',

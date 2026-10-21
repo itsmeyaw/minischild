@@ -113,11 +113,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
     await _connect();
   }
 
-  Future<void> _edit(Widget screen) async {
+  Future<void> _edit(Widget screen, {required bool restarts}) async {
     final saved = await Navigator.of(
       context,
     ).push<bool>(MaterialPageRoute(builder: (_) => screen));
-    if (saved == true && mounted) await _restart();
+    if (saved != true || !mounted) return;
+    if (restarts) {
+      await _restart();
+    } else {
+      await _reloadDetails();
+    }
   }
 
   Future<void> _restart() async {
@@ -131,6 +136,17 @@ class _DeviceScreenState extends State<DeviceScreen> {
     if (mounted) setState(() => _connection = const _ConnectFailed());
   }
 
+  Future<void> _reloadDetails() async {
+    final connection = _connection;
+    if (connection is! _Connected) return;
+    try {
+      await _loadDetails(connection.details.info);
+    } catch (error) {
+      debugPrint('Reading ${widget.device.name} failed: $error');
+      if (mounted) setState(() => _connection = const _ConnectionLost());
+    }
+  }
+
   Future<void> _connect() async {
     final connected = await _tryConnect();
     if (!connected && mounted) {
@@ -141,23 +157,25 @@ class _DeviceScreenState extends State<DeviceScreen> {
   Future<bool> _tryConnect() async {
     try {
       final info = await widget.link.connect(widget.device);
-      final settings = await widget.link.readSettings();
-      if (!mounted) {
-        await widget.link.disconnect();
-        return true;
-      }
-      final names = await _lookUp(info, settings);
-      if (mounted) {
-        setState(
-          () => _connection = _Connected(
-            _DeviceDetails(info: info, settings: settings, names: names),
-          ),
-        );
-      }
+      await _loadDetails(info);
+      if (!mounted) await widget.link.disconnect();
       return true;
     } catch (error) {
       debugPrint('Connecting to ${widget.device.name} failed: $error');
       return false;
+    }
+  }
+
+  Future<void> _loadDetails(DeviceInfo info) async {
+    final settings = await widget.link.readSettings();
+    if (!mounted) return;
+    final names = await _lookUp(info, settings);
+    if (mounted) {
+      setState(
+        () => _connection = _Connected(
+          _DeviceDetails(info: info, settings: settings, names: names),
+        ),
+      );
     }
   }
 
@@ -243,8 +261,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
           title: const Text('WiFi network'),
           subtitle: Text(details.settings.wifiSsid),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () =>
-              _edit(WifiScreen(link: widget.link, settings: details.settings)),
+          onTap: () => _edit(
+            WifiScreen(link: widget.link, settings: details.settings),
+            restarts: true,
+          ),
         ),
         ListTile(
           title: const Text('Provider'),
@@ -308,6 +328,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                   link: widget.link,
                   settings: settings,
                 ),
+                restarts: false,
               ),
       ),
       const _SectionHeader('Route Directions'),

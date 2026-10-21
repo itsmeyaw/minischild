@@ -209,6 +209,52 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
+  Future<void> saveStation(
+    WidgetTester tester,
+    String query,
+    String name,
+  ) async {
+    await tester.tap(find.widgetWithText(ListTile, 'Station'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), query);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    await tester.tap(find.text(name));
+    await tester.pump();
+    await tester.tap(find.text('Save'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+  }
+
+  testWidgets(
+    'saving a Station keeps the connection and shows the new Station',
+    (tester) async {
+      final link = await openDevice(tester);
+      await saveStation(tester, 'Garchi', 'Garching');
+
+      expect(link.writes.single.settings.stationId, 'de:09162:6');
+      expect(find.text('The Device is restarting'), findsNothing);
+      expect(link.connectCount, 1);
+      expect(link.disconnectCount, 0);
+      expect(find.text('Garching'), findsOneWidget);
+      expect(find.text('All Route Directions'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a failed re-read after saving a Station says the connection was lost',
+    (tester) async {
+      final link = await openDevice(tester);
+      link.readError = _connectFailure;
+      await saveStation(tester, 'Garchi', 'Garching');
+
+      expect(find.text('Connection to the Device was lost'), findsOneWidget);
+      expect(find.text('The Device is restarting'), findsNothing);
+      expect(find.text('München, Marienplatz'), findsNothing);
+    },
+  );
+
   testWidgets('saving settings restarts the Device and reconnects with them', (
     tester,
   ) async {
