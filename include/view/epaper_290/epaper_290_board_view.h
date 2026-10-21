@@ -20,6 +20,7 @@ class Epaper290BoardView : public BoardView {
   void render(const DepartureBoard& board, time_t now, std::optional<time_t> staleSince,
               Refresh refresh) override;
   void renderNoConnection(time_t now, Refresh refresh) override;
+  size_t rows() const override;
 
  private:
   void paint(Refresh refresh, const std::function<void()>& drawContent);

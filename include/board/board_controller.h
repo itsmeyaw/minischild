@@ -35,10 +35,11 @@ class BoardController {
     Refresh refresh = renders_ % kFullRefreshEvery == 0 ? Refresh::Full : Refresh::Partial;
     renders_++;
     if (!lastGood_ || now < lastGoodAt_ || now - lastGoodAt_ > kStaleLimit) {
+      lastGood_.reset();
       view_.renderNoConnection(now, refresh);
     } else {
-      DepartureBoard board = *lastGood_;
-      board.departures = selectDepartures(std::move(board.departures), now);
+      DepartureBoard board{lastGood_->stopName, lastGood_->timestamp,
+                           selectDepartures(lastGood_->departures, now, view_.rows())};
       view_.render(board, now, error ? std::optional<time_t>(lastGoodAt_) : std::nullopt, refresh);
     }
     return error ? std::optional<FetchError>(*error) : std::nullopt;

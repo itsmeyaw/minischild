@@ -62,6 +62,8 @@ void Epaper290BoardView::renderNoConnection(time_t now, Refresh refresh) {
   });
 }
 
+size_t Epaper290BoardView::rows() const { return kRows; }
+
 void Epaper290BoardView::paint(Refresh refresh, const std::function<void()>& drawContent) {
   if (refresh == Refresh::Full) {
     display_.setFullWindow();

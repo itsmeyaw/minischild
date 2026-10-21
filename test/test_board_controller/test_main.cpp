@@ -22,6 +22,7 @@ class FakeProvider : public DepartureProvider {
 
 class FakeView : public BoardView {
  public:
+  size_t rowCount = 5;
   int renders = 0;
   int noConnections = 0;
   std::vector<Refresh> refreshes;
@@ -31,6 +32,8 @@ class FakeView : public BoardView {
   std::optional<time_t> lastStaleSince;
   Refresh lastRefresh = Refresh::Partial;
   time_t lastNow = 0;
+
+  size_t rows() const override { return rowCount; }
 
   void render(const DepartureBoard& board, time_t now, std::optional<time_t> staleSince,
               Refresh refresh) override {
@@ -271,6 +274,36 @@ void test_failure_after_clock_jumped_before_last_good_fetch_renders_no_connectio
   TEST_ASSERT_TRUE(view.lastWasNoConnection);
 }
 
+void test_board_too_stale_to_show_is_never_shown_again() {
+  provider.result = boardWith({scheduledAt("S1", NOON + 5 * 60)});
+  BoardController controller(provider, view, clock_);
+  controller.tick();
+
+  clock_.current = NOON + 10 * 60 + 1;
+  provider.result = FetchError{"boom"};
+  controller.tick();
+
+  clock_.current = NOON + 5 * 60;
+  controller.tick();
+
+  TEST_ASSERT_EQUAL(1, view.renders);
+  TEST_ASSERT_EQUAL(2, view.noConnections);
+  TEST_ASSERT_TRUE(view.lastWasNoConnection);
+}
+
+void test_view_receives_only_as_many_departures_as_it_has_rows() {
+  view.rowCount = 2;
+  provider.result = boardWith({scheduledAt("A", NOON + 5 * 60), scheduledAt("B", NOON + 2 * 60),
+                               scheduledAt("C", NOON + 8 * 60)});
+  BoardController controller(provider, view, clock_);
+
+  controller.tick();
+
+  TEST_ASSERT_EQUAL(2, view.lastRoutes.size());
+  TEST_ASSERT_EQUAL_STRING("B", view.lastRoutes[0].c_str());
+  TEST_ASSERT_EQUAL_STRING("A", view.lastRoutes[1].c_str());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_first_tick_fetches_and_renders_fresh_board_fully);
@@ -287,5 +320,7 @@ int main() {
   RUN_TEST(test_stale_render_reselects_departures_against_current_time);
   RUN_TEST(test_clock_jumping_backwards_fetches_again);
   RUN_TEST(test_failure_after_clock_jumped_before_last_good_fetch_renders_no_connection);
+  RUN_TEST(test_board_too_stale_to_show_is_never_shown_again);
+  RUN_TEST(test_view_receives_only_as_many_departures_as_it_has_rows);
   return UNITY_END();
 }
