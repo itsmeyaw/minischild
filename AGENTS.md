@@ -15,6 +15,7 @@ Use miniagents for implementation, menial, or simple tasks.
 ## Development Note
 
 - Commit in small functional change instead of one big change if possible to make review easier.
+- When designing UI, ensure to use `impeccable` skill.
 
 ## Agent skills
 
