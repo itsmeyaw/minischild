@@ -18,6 +18,12 @@ inline int64_t daysFromCivil(int64_t y, unsigned m, unsigned d) {
   return era * 146097 + static_cast<int64_t>(doe) - 719468;
 }
 
+inline int daysInMonth(int64_t y, int m) {
+  static const int kDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  const bool leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+  return m == 2 && leap ? 29 : kDays[m - 1];
+}
+
 }  // namespace iso8601_detail
 
 // Epoch seconds of "YYYY-MM-DDTHH:MM:SS[.fff]" followed by "Z" or "+hh:mm" / "-hh:mm".
@@ -26,7 +32,8 @@ inline std::optional<time_t> parseIso8601(const char* text) {
   int year, month, day, hour, minute, second, consumed = 0;
   if (sscanf(text, "%4d-%2d-%2dT%2d:%2d:%2d%n", &year, &month, &day, &hour, &minute, &second,
              &consumed) != 6 ||
-      month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59) {
+      month < 1 || month > 12 || day < 1 || day > iso8601_detail::daysInMonth(year, month) ||
+      hour > 23 || minute > 59 || second > 59) {
     return std::nullopt;
   }
   const char* p = text + consumed;
@@ -37,7 +44,7 @@ inline std::optional<time_t> parseIso8601(const char* text) {
   if (strcmp(p, "Z") != 0) {
     int offsetHour, offsetMinute;
     if (strlen(p) != 6 || (p[0] != '+' && p[0] != '-') || p[3] != ':' ||
-        sscanf(p + 1, "%2d:%2d", &offsetHour, &offsetMinute) != 2) {
+        sscanf(p + 1, "%2d:%2d", &offsetHour, &offsetMinute) != 2 || offsetMinute > 59) {
       return std::nullopt;
     }
     offset = (p[0] == '-' ? -1 : 1) * (offsetHour * 3600 + offsetMinute * 60);

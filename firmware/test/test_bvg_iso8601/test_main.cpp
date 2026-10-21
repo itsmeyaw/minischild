@@ -42,6 +42,21 @@ void test_invalid_input_is_nullopt() {
   TEST_ASSERT_FALSE(parseIso8601("2026-13-21T18:14:00+02:00").has_value());
 }
 
+void test_days_beyond_the_month_length_are_nullopt() {
+  TEST_ASSERT_FALSE(parseIso8601("2026-02-29T00:00:00Z").has_value());
+  TEST_ASSERT_FALSE(parseIso8601("2026-04-31T00:00:00Z").has_value());
+  TEST_ASSERT_FALSE(parseIso8601("2100-02-29T00:00:00Z").has_value());
+}
+
+void test_leap_days_are_valid() {
+  TEST_ASSERT_EQUAL(1835395200, parseIso8601("2028-02-29T00:00:00Z").value());
+  TEST_ASSERT_EQUAL(951782400, parseIso8601("2000-02-29T00:00:00Z").value());
+}
+
+void test_offset_minutes_above_59_are_nullopt() {
+  TEST_ASSERT_FALSE(parseIso8601("2026-10-21T18:14:00+02:60").has_value());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_winter_offset_is_cet);
@@ -51,5 +66,8 @@ int main() {
   RUN_TEST(test_fractional_seconds_are_ignored);
   RUN_TEST(test_offsets_across_the_dst_change_are_exact);
   RUN_TEST(test_invalid_input_is_nullopt);
+  RUN_TEST(test_days_beyond_the_month_length_are_nullopt);
+  RUN_TEST(test_leap_days_are_valid);
+  RUN_TEST(test_offset_minutes_above_59_are_nullopt);
   return UNITY_END();
 }
