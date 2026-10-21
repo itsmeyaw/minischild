@@ -98,15 +98,15 @@ MvvDepartureProvider::MvvDepartureProvider(std::string stationId,
                                            std::vector<std::string> routeDirectionIds)
     : stationId_(std::move(stationId)),
       routeDirections_(std::move(routeDirectionIds),
-                       [stationId = stationId_] {
+                       [this] {
                          return getJson<RouteDirectionsResult>(
-                             mvvAvailableLinesUrl(stationId),
+                             mvvAvailableLinesUrl(stationId_),
                              [](WaitingReader& body) { return parseMvvAvailableLines(body); });
                        }),
-      stopName_([stationId = stationId_] {
-        return getJson<StopNameResult>(
-            mvvStopFinderUrl(stationId),
-            [&stationId](WaitingReader& body) { return parseMvvStopName(body, stationId); });
+      stopName_([this] {
+        return getJson<StopNameResult>(mvvStopFinderUrl(stationId_), [this](WaitingReader& body) {
+          return parseMvvStopName(body, stationId_);
+        });
       }) {}
 
 FetchResult MvvDepartureProvider::fetch() {
@@ -117,6 +117,12 @@ FetchResult MvvDepartureProvider::fetch() {
     board->stopName = stopName_.get();
   }
   return result;
+}
+
+void MvvDepartureProvider::select(const BoardSelection& selection) {
+  stationId_ = selection.stationId;
+  routeDirections_.select(selection.routeDirectionIds);
+  stopName_.reset();
 }
 
 FetchResult MvvDepartureProvider::fetchBoard() {

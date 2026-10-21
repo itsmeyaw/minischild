@@ -13,11 +13,14 @@ class FakeProvider : public DepartureProvider {
  public:
   FetchResult result = DepartureBoard{};
   int fetches = 0;
+  BoardSelection selection;
 
   FetchResult fetch() override {
     fetches++;
     return result;
   }
+
+  void select(const BoardSelection& chosen) override { selection = chosen; }
 };
 
 class FakeView : public BoardView {

@@ -11,8 +11,12 @@ class MvvDepartureProvider : public DepartureProvider {
  public:
   // An empty routeDirectionIds shows all Routes at the Station.
   MvvDepartureProvider(std::string stationId, std::vector<std::string> routeDirectionIds);
+  // Not copyable or movable: the lookups capture this.
+  MvvDepartureProvider(const MvvDepartureProvider&) = delete;
+  MvvDepartureProvider& operator=(const MvvDepartureProvider&) = delete;
 
   FetchResult fetch() override;
+  void select(const BoardSelection& selection) override;
 
  private:
   FetchResult fetchBoard();
