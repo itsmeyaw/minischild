@@ -6,7 +6,7 @@ A small always-on display that shows the upcoming public transport departures at
 
 </div>
 
-Minischild runs on an ESP32 and renders a live departure board on an e-paper display. It fetches realtime data from a transit provider (MVV and BVG out of the box), shapes it into a GTFS Realtime-like model, and lets any display implementation render it.
+Minischild runs on an ESP32 and renders a live departure board on an e-paper display. It fetches realtime data from a transit provider (MVV, BVG, and the EFA regions VVS, VRR, KVV and Bavaria out of the box), shapes it into a GTFS Realtime-like model, and lets any display implementation render it.
 
 ## Requirements
 
@@ -49,10 +49,11 @@ The build environment picks the board; the view (display) and provider (data sou
 pio run -e esp32dev -t upload                # epaper_290 + mvv
 VIEW=epaper_42 pio run -e esp32dev -t upload # another view, same provider
 PROVIDER=bvg pio run -e esp32dev -t upload   # epaper_290 + bvg
+PROVIDER=vvs pio run -e esp32dev -t upload   # epaper_290 + vvs (Stuttgart, an EFA region)
 VIEW=epaper_42 PROVIDER=gtfs pio run -e esp32dev   # swap both
 ```
 
-A name is a folder under `firmware/src/view/` or `firmware/src/provider/`; a name with no matching folder stops the build and lists the available ones. Put any settings the chosen view or provider needs in `config.h`.
+A name is a folder under `firmware/src/view/` or `firmware/src/provider/`; a name with no matching folder stops the build and lists the available ones. Put any settings the chosen view or provider needs in `config.h`. The `vvs`, `vrr`, `kvv` and `bavaria` providers share one EFA core and differ only in their region's base URL (see [`firmware/include/provider/efa/README.md`](firmware/include/provider/efa/README.md)).
 
 ### Changing settings over BLE
 
@@ -84,7 +85,7 @@ A folder without its `setup.cpp` fails to link with `undefined reference to setu
 firmware/                         PlatformIO project for the Device
 firmware/include/, firmware/src/  board, model, provider, util and view code
 firmware/src/view/<name>/         one BoardView implementation per supported display
-firmware/src/provider/<name>/     one DepartureProvider implementation per data source
+firmware/src/provider/<name>/     one DepartureProvider implementation per data source (mvv, bvg, vvs, vrr, kvv, bavaria)
 firmware/test/                    native Unity tests, one folder per unit under test
 firmware/scripts/                 build scripts (view and provider selection)
 app/                              Flutter Companion App (see app/README.md)
@@ -97,6 +98,6 @@ GLOSSARY.md                       domain language, shared by every folder
 - [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebase
 - [`docs/ble-protocol.md`](docs/ble-protocol.md) — the BLE contract between the Device and the Companion App
 - [`app/README.md`](app/README.md) — the Companion App: running, checks and sideloading
-- Each provider's `README.md` inside [`firmware/include/provider/`](firmware/include/provider) (`mvv/`, `bvg/`, ...)
+- Each provider's `README.md` inside [`firmware/include/provider/`](firmware/include/provider) (`mvv/`, `bvg/`, `efa/`, ...)
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — principles the code follows
 - [`docs/adr/`](docs/adr) — why the view/provider split and the GTFS-shaped model exist

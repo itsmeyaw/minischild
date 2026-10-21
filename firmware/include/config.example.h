@@ -26,6 +26,7 @@ constexpr uint32_t BLE_PASSKEY = 123456;
 // https://www.mvv-muenchen.de/?eID=departuresFinder&action=available_lines&stop_id=de%3A09162%3A2
 // Leave ROUTE_DIRECTION_IDS empty ({}) to show all Routes at the Station.
 // BVG uses an IBNR Station ID and "<line>|<IBNR>" Route Direction IDs (see provider/bvg/README.md).
+// EFA providers use global IDs and "<line>|<destination ID>" (see provider/efa/README.md).
 constexpr const char* STATION_ID = "de:09162:2";
 inline const std::vector<std::string> ROUTE_DIRECTION_IDS = {"ddb:920S1: :H:j26"};
 // Platforms to show, matched by exact text as the provider names them (e.g. "2", "U-Bahn Gleis 1").
