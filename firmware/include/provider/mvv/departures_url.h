@@ -5,24 +5,9 @@
 #include <string>
 #include <vector>
 
-namespace mvv_url_detail {
+#include "util/percent_encode.h"
 
-inline std::string percentEncode(const std::string& s) {
-  static const char kHex[] = "0123456789ABCDEF";
-  std::string out;
-  for (unsigned char c : s) {
-    bool unreserved = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
-                      c == '-' || c == '.' || c == '_' || c == '~';
-    if (unreserved) {
-      out += static_cast<char>(c);
-    } else {
-      out += '%';
-      out += kHex[c >> 4];
-      out += kHex[c & 0xF];
-    }
-  }
-  return out;
-}
+namespace mvv_url_detail {
 
 inline std::string base64(const std::string& in) {
   static const char kAlphabet[] =
@@ -53,11 +38,11 @@ inline std::string mvvDeparturesUrl(const std::string& stationId,
                                     time_t requestedTimestamp) {
   std::string lines;
   for (const std::string& id : routeDirectionIds) {
-    lines += "&line=" + mvv_url_detail::percentEncode(id);
+    lines += "&line=" + percentEncode(id);
   }
   return mvv_url_detail::stationUrl("get_departures", stationId) +
          "&requested_timestamp=" + std::to_string(requestedTimestamp) +
-         "&lines=" + mvv_url_detail::percentEncode(mvv_url_detail::base64(lines));
+         "&lines=" + percentEncode(mvv_url_detail::base64(lines));
 }
 
 // URL of the MVV website's endpoint listing the Route Directions of a Station.

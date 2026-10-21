@@ -1,8 +1,5 @@
 #include "provider/mvv/departure_provider.h"
 
-#include <HTTPClient.h>
-#include <WiFiClientSecure.h>
-
 #include <ctime>
 #include <string>
 #include <utility>
@@ -12,6 +9,7 @@
 #include "provider/mvv/available_lines_parser.h"
 #include "provider/mvv/departure_parser.h"
 #include "provider/mvv/departures_url.h"
+#include "util/https_json.h"
 
 namespace {
 // USERTrust RSA root; anchors www.mvv-muenchen.de's Sectigo chain. Expires 2038-01-18.
@@ -51,46 +49,6 @@ jjxDah2nGN59PRbxYvnKkKj9
 -----END CERTIFICATE-----
 )";
 
-// Observed on Arduino core 3.x: TLS reads only see newly arrived data if the caller yields while
-// waiting, which neither NetworkClient::readBytes nor Stream::timedRead does.
-struct WaitingReader {
-  Stream& stream;
-  int read() {
-    const unsigned long start = millis();
-    while (stream.available() <= 0) {
-      if (millis() - start >= stream.getTimeout()) return -1;
-      delay(1);
-    }
-    return stream.read();
-  }
-  size_t readBytes(char* buffer, size_t length) {
-    size_t count = 0;
-    for (int c; count < length && (c = read()) >= 0; count++) buffer[count] = static_cast<char>(c);
-    return count;
-  }
-};
-
-// GETs url and stream-parses the body; HTTP failures become a FetchError in Result.
-template <typename Result, typename Parse>
-Result getJson(const std::string& url, Parse parse) {
-  WiFiClientSecure client;
-  client.setCACert(kUserTrustRsaRootCa);
-  HTTPClient http;
-  // HTTP/1.0 has no chunked encoding, so the body can be stream-parsed.
-  http.useHTTP10(true);
-  if (!http.begin(client, url.c_str())) return FetchError{"HTTP begin failed"};
-  const int code = http.GET();
-  if (code < 200 || code >= 300) {
-    std::string message = "HTTP " + std::to_string(code);
-    if (code < 0) message += ": " + std::string(HTTPClient::errorToString(code).c_str());
-    http.end();
-    return FetchError{message};
-  }
-  WaitingReader body{http.getStream()};
-  Result result = parse(body);
-  http.end();
-  return result;
-}
 }  // namespace
 
 MvvDepartureProvider::MvvDepartureProvider(std::string stationId,
@@ -98,7 +56,7 @@ MvvDepartureProvider::MvvDepartureProvider(std::string stationId,
     : stationId_(std::move(stationId)),
       routeDirections_(std::move(routeDirectionIds), [stationId = stationId_] {
         return getJson<RouteDirectionsResult>(
-            mvvAvailableLinesUrl(stationId),
+            kUserTrustRsaRootCa, mvvAvailableLinesUrl(stationId),
             [](WaitingReader& body) { return parseMvvAvailableLines(body); });
       }) {}
 
@@ -109,6 +67,6 @@ FetchResult MvvDepartureProvider::fetch() {
   const time_t now = time(nullptr);
   // MVV rejects a departures request without lines; a Station without Route Directions has none.
   if (ids.empty()) return DepartureBoard{"", now, {}};
-  return getJson<FetchResult>(mvvDeparturesUrl(stationId_, ids, now),
+  return getJson<FetchResult>(kUserTrustRsaRootCa, mvvDeparturesUrl(stationId_, ids, now),
                               [now](WaitingReader& body) { return parseMvvDepartures(body, now); });
 }
