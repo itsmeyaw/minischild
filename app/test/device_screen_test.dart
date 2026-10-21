@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minischild/app.dart';
 import 'package:minischild/ble_protocol.dart';
 import 'package:minischild/device_link.dart';
+import 'package:minischild/device_screen.dart';
 import 'package:minischild/transit_provider.dart';
 
 import 'fakes.dart';
@@ -262,6 +265,31 @@ void main() {
       expect(find.text('Couldn’t connect to the Device'), findsOneWidget);
     },
   );
+
+  testWidgets('a connection that finishes after leaving the Device is closed', (
+    tester,
+  ) async {
+    final link = FakeDeviceLink(info: info, settings: settings)
+      ..connectGate = Completer<void>();
+    await tester.pumpWidget(
+      CompanionApp(link: link, providerFor: (_) => mvvProvider()),
+    );
+    link.emitDevices(const [_device]);
+    await tester.pump();
+    await tester.tap(find.text(_device.name));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+
+    Navigator.of(tester.element(find.byType(DeviceScreen))).pop();
+    await tester.pump(const Duration(seconds: 1));
+    final disconnectsBeforeConnected = link.disconnectCount;
+
+    link.connectGate!.complete();
+    await tester.pump();
+    await tester.pump();
+
+    expect(link.disconnectCount, disconnectsBeforeConnected + 1);
+  });
 
   testWidgets('leaving the Device while it restarts stops retrying', (
     tester,

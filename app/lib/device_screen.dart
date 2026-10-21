@@ -142,6 +142,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
     try {
       final info = await widget.link.connect(widget.device);
       final settings = await widget.link.readSettings();
+      if (!mounted) {
+        await widget.link.disconnect();
+        return true;
+      }
       final names = await _lookUp(info, settings);
       if (mounted) {
         setState(

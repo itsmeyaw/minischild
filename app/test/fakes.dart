@@ -23,6 +23,7 @@ class FakeDeviceLink implements DeviceLink {
   int connectCount = 0;
   int disconnectCount = 0;
   DeviceLinkException? connectError;
+  Completer<void>? connectGate;
   final writes = <({Settings settings, String wifiPassword})>[];
   DeviceLinkException? writeError;
 
@@ -42,6 +43,7 @@ class FakeDeviceLink implements DeviceLink {
   @override
   Future<DeviceInfo> connect(FoundDevice device) async {
     connectCount++;
+    await connectGate?.future;
     if (connectError case final error?) throw error;
     return info;
   }
