@@ -45,6 +45,7 @@ std::optional<BoardController> controller;
 std::optional<BleSettingsService> bleService;
 ConnectionWatchdog watchdog;
 uint32_t lowestMinFreeHeap = UINT32_MAX;
+Settings runningSettings;
 }  // namespace
 
 void setup() {
@@ -52,26 +53,34 @@ void setup() {
   settingsStore.emplace(
       settingsBackend,
       Settings{{STATION_ID, ROUTE_DIRECTION_IDS, PLATFORMS}, WIFI_SSID, WIFI_PASSWORD});
-  const Settings settings = settingsStore->load();
+  runningSettings = settingsStore->load();
   // Before WiFi, so a Device with the wrong WiFi can still be reconfigured over BLE.
   bleService.emplace(*settingsStore, encodeInfo(PROVIDER_NAME, FIRMWARE_VERSION), BLE_PASSKEY);
   bleService->begin();
   BoardView& view = setupBoardView();
-  DepartureProvider& provider = setupDepartureProvider(settings.boardSelection);
+  DepartureProvider& provider = setupDepartureProvider(runningSettings.boardSelection);
   // Both run even on failure: the watchdog retries WiFi and SNTP keeps polling, so fetches recover.
-  if (!connectWifi(settings.wifiSsid, settings.wifiPassword)) {
+  if (!connectWifi(runningSettings.wifiSsid, runningSettings.wifiPassword)) {
     Serial.println("WiFi connect failed");
   }
   if (!syncClock()) Serial.println("Clock sync failed");
-  controller.emplace(provider, view, systemClock, settings.boardSelection.platforms);
+  controller.emplace(provider, view, systemClock, runningSettings.boardSelection.platforms);
 }
 
 void loop() {
-  // Lets the write response reach the phone before the link drops.
-  if (bleService->restartRequested()) {
-    Serial.println("Restarting to apply settings");
-    delay(500);
-    ESP.restart();
+  // Runs between ticks, so no fetch's TLS buffers are live while the new settings are allocated.
+  if (bleService->takeSettingsSaved()) {
+    const Settings saved = settingsStore->load();
+    if (saved.wifiSsid != runningSettings.wifiSsid ||
+        saved.wifiPassword != runningSettings.wifiPassword) {
+      Serial.println("Restarting to join the new WiFi");
+      // Lets the write response reach the phone before the link drops.
+      delay(500);
+      ESP.restart();
+    }
+    Serial.println("Applying the new Board Selection");
+    controller->select(saved.boardSelection);
+    runningSettings = saved;
   }
   // The core's auto-reconnect gives up after some disconnect reasons, so retry here too.
   switch (watchdog.check(WiFi.status() == WL_CONNECTED, millis())) {

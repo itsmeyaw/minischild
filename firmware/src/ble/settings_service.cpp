@@ -61,7 +61,7 @@ void BleSettingsService::SettingsCallbacks::onWrite(NimBLECharacteristic* charac
     Serial.printf("Settings write rejected: %s\n", error->message.c_str());
   } else {
     Serial.println("Settings saved");
-    restart_ = true;
+    saved_ = true;
   }
   // Replace the written value so the WiFi password doesn't stay readable in the attribute.
   characteristic->setValue(encodeSettings(store_.load()));
