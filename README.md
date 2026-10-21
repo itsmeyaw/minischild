@@ -79,6 +79,7 @@ firmware/src/view/<name>/         one BoardView implementation per supported dis
 firmware/src/provider/<name>/     one DepartureProvider implementation per data source
 firmware/test/                    native Unity tests, one folder per unit under test
 firmware/scripts/                 build scripts (view and provider selection)
+app/                              Flutter Companion App (see app/README.md)
 docs/adr/                         architecture decisions, shared by every folder
 GLOSSARY.md                       domain language, shared by every folder
 ```
@@ -86,6 +87,7 @@ GLOSSARY.md                       domain language, shared by every folder
 ## Further reading
 
 - [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebase
+- [`app/README.md`](app/README.md) — the Companion App: running, checks and sideloading
 - Each provider's `README.md` inside [`firmware/include/provider/`](firmware/include/provider)
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — principles the code follows
 - [`docs/adr/`](docs/adr) — why the view/provider split and the GTFS-shaped model exist
