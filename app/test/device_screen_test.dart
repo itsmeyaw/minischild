@@ -273,6 +273,43 @@ void main() {
     expect(find.text('office'), findsOneWidget);
   });
 
+  testWidgets(
+    'saving the same network without a password keeps the connection',
+    (tester) async {
+      final link = await openDevice(tester);
+      await saveWifi(tester, settings.wifiSsid);
+
+      expect(link.writes.single.settings.wifiSsid, settings.wifiSsid);
+      expect(find.text('The Device is restarting'), findsNothing);
+      expect(link.connectCount, 1);
+      expect(link.disconnectCount, 0);
+    },
+  );
+
+  testWidgets(
+    'saving a new password for the same network restarts the Device',
+    (tester) async {
+      final link = await openDevice(tester);
+      await tester.tap(find.widgetWithText(ListTile, 'WiFi network'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.enterText(find.byType(TextFormField).at(1), 'correct horse');
+      await tester.tap(find.text('Save'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(link.writes.single.wifiPassword, 'correct horse');
+      expect(find.text('The Device is restarting'), findsOneWidget);
+
+      await tester.pump(_restartDelay);
+      await tester.pump();
+
+      expect(link.disconnectCount, 1);
+      expect(link.connectCount, 2);
+      expect(find.text('The Device is restarting'), findsNothing);
+    },
+  );
+
   testWidgets('a restart retries until the Device is back', (tester) async {
     final link = await openDevice(tester);
     link.connectError = _connectFailure;
