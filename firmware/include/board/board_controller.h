@@ -15,8 +15,9 @@ constexpr int kFullRefreshEvery = 30;    // every 30th render is Refresh::Full
 
 class BoardController {
  public:
-  BoardController(DepartureProvider& provider, BoardView& view, Clock& clock)
-      : provider_(provider), view_(view), clock_(clock) {}
+  BoardController(DepartureProvider& provider, BoardView& view, Clock& clock,
+                  std::vector<std::string> platforms)
+      : provider_(provider), view_(view), clock_(clock), platforms_(std::move(platforms)) {}
 
   // Fetches and renders on the first tick of each minute (hh:mm:00); call from loop().
   // Returns the fetch error, if this tick fetched and the fetch failed, so the caller can log it.
@@ -39,7 +40,7 @@ class BoardController {
       view_.renderNoConnection(now, refresh);
     } else {
       DepartureBoard board{lastGood_->stopName, lastGood_->timestamp,
-                           selectDepartures(lastGood_->departures, now, view_.rows())};
+                           selectDepartures(lastGood_->departures, platforms_, now, view_.rows())};
       view_.render(board, now, error ? std::optional<time_t>(lastGoodAt_) : std::nullopt, refresh);
     }
     return error ? std::optional<FetchError>(*error) : std::nullopt;
@@ -49,6 +50,7 @@ class BoardController {
   DepartureProvider& provider_;
   BoardView& view_;
   Clock& clock_;
+  std::vector<std::string> platforms_;
   std::optional<time_t> lastFetchAt_;
   std::optional<DepartureBoard> lastGood_;
   time_t lastGoodAt_ = 0;

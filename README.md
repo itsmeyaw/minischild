@@ -24,7 +24,7 @@ The firmware is a PlatformIO project in `firmware/`; run every `pio` command bel
 
 1. Copy `firmware/include/config.example.h` to `firmware/include/config.h`, then fill in:
    - WiFi SSID and password
-   - the Station ID and, optionally, the Route Direction IDs to show (leave the list empty to show every Route at the Station)
+   - the Station ID and, optionally, the Route Direction IDs and Platforms to show (leave a list empty to show everything of that kind)
    - the e-paper pin wiring, if it differs from the default
 2. Flash the board:
 
