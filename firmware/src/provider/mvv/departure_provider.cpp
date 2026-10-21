@@ -12,6 +12,7 @@
 #include "provider/mvv/available_lines_parser.h"
 #include "provider/mvv/departure_parser.h"
 #include "provider/mvv/departures_url.h"
+#include "provider/mvv/stop_name_parser.h"
 
 namespace {
 // USERTrust RSA root; anchors www.mvv-muenchen.de's Sectigo chain. Expires 2038-01-18.
@@ -96,13 +97,29 @@ Result getJson(const std::string& url, Parse parse) {
 MvvDepartureProvider::MvvDepartureProvider(std::string stationId,
                                            std::vector<std::string> routeDirectionIds)
     : stationId_(std::move(stationId)),
-      routeDirections_(std::move(routeDirectionIds), [stationId = stationId_] {
-        return getJson<RouteDirectionsResult>(
-            mvvAvailableLinesUrl(stationId),
-            [](WaitingReader& body) { return parseMvvAvailableLines(body); });
+      routeDirections_(std::move(routeDirectionIds),
+                       [stationId = stationId_] {
+                         return getJson<RouteDirectionsResult>(
+                             mvvAvailableLinesUrl(stationId),
+                             [](WaitingReader& body) { return parseMvvAvailableLines(body); });
+                       }),
+      stopName_([stationId = stationId_] {
+        return getJson<StopNameResult>(
+            mvvStopFinderUrl(stationId),
+            [&stationId](WaitingReader& body) { return parseMvvStopName(body, stationId); });
       }) {}
 
 FetchResult MvvDepartureProvider::fetch() {
+  FetchResult result = fetchBoard();
+  // A Station with no departures has no name on its board; look it up instead.
+  if (DepartureBoard* board = std::get_if<DepartureBoard>(&result);
+      board && board->stopName.empty()) {
+    board->stopName = stopName_.get();
+  }
+  return result;
+}
+
+FetchResult MvvDepartureProvider::fetchBoard() {
   const RouteDirectionsResult routeDirections = routeDirections_.get();
   if (const FetchError* error = std::get_if<FetchError>(&routeDirections)) return *error;
   const std::vector<std::string>& ids = std::get<std::vector<std::string>>(routeDirections);

@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 
 import 'ble_protocol.dart';
 import 'device_link.dart';
+import 'station_search_screen.dart';
 import 'status_message.dart';
 import 'transit_provider.dart';
+import 'wifi_screen.dart';
+
+const _restartDelay = Duration(seconds: 3);
+const _restartAttempts = 10;
 
 class DeviceScreen extends StatefulWidget {
   const DeviceScreen({
@@ -43,6 +48,10 @@ class _Connected extends _Connection {
   const _Connected(this.details);
 
   final _DeviceDetails details;
+}
+
+class _Restarting extends _Connection {
+  const _Restarting();
 }
 
 sealed class _Names {
@@ -104,10 +113,39 @@ class _DeviceScreenState extends State<DeviceScreen> {
     await _connect();
   }
 
+  Future<void> _edit(Widget screen) async {
+    final saved = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => screen));
+    if (saved == true && mounted) await _restart();
+  }
+
+  Future<void> _restart() async {
+    setState(() => _connection = const _Restarting());
+    await widget.link.disconnect();
+    for (var attempt = 0; attempt < _restartAttempts; attempt++) {
+      await Future<void>.delayed(_restartDelay);
+      if (!mounted) return;
+      if (await _tryConnect()) return;
+    }
+    if (mounted) setState(() => _connection = const _ConnectFailed());
+  }
+
   Future<void> _connect() async {
+    final connected = await _tryConnect();
+    if (!connected && mounted) {
+      setState(() => _connection = const _ConnectFailed());
+    }
+  }
+
+  Future<bool> _tryConnect() async {
     try {
       final info = await widget.link.connect(widget.device);
       final settings = await widget.link.readSettings();
+      if (!mounted) {
+        await widget.link.disconnect();
+        return true;
+      }
       final names = await _lookUp(info, settings);
       if (mounted) {
         setState(
@@ -116,9 +154,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
           ),
         );
       }
+      return true;
     } catch (error) {
       debugPrint('Connecting to ${widget.device.name} failed: $error');
-      if (mounted) setState(() => _connection = const _ConnectFailed());
+      return false;
     }
   }
 
@@ -171,6 +210,12 @@ class _DeviceScreenState extends State<DeviceScreen> {
         action: 'Reconnect',
       ),
       _Connected(:final details) => _loaded(details),
+      _Restarting() => const StatusMessage(
+        icon: CircularProgressIndicator(),
+        headline: 'The Device is restarting',
+        message:
+            'The app reconnects as soon as it’s back. This takes a few seconds.',
+      ),
     };
   }
 
@@ -188,14 +233,18 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   Widget _loaded(_DeviceDetails details) {
+    final provider = widget.providerFor(details.info.provider);
     return ListView(
       children: [
         const _SectionHeader('Board Selection'),
-        ..._selection(details),
+        ..._selection(details, provider),
         const _SectionHeader('Device'),
         ListTile(
           title: const Text('WiFi network'),
           subtitle: Text(details.settings.wifiSsid),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () =>
+              _edit(WifiScreen(link: widget.link, settings: details.settings)),
         ),
         ListTile(
           title: const Text('Provider'),
@@ -209,7 +258,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
     );
   }
 
-  List<Widget> _selection(_DeviceDetails details) {
+  List<Widget> _selection(_DeviceDetails details, TransitProvider? provider) {
     final settings = details.settings;
     return switch (details.names) {
       _UnsupportedProvider() => [
@@ -217,7 +266,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
           leading: const Icon(Icons.info_outline),
           title: const Text('Unsupported provider'),
           subtitle: Text(
-            'This app can’t show the Board Selection for the “${details.info.provider}” provider. You can still see the WiFi network.',
+            'This app can’t show the Board Selection for the “${details.info.provider}” provider. You can still change the WiFi network.',
           ),
         ),
       ],
@@ -229,10 +278,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
-        ..._stationAndRoutes(settings, null, const {}),
+        ..._stationAndRoutes(settings, provider, null, const {}),
       ],
       _NamesFound(:final stationName, :final routeLabels) => _stationAndRoutes(
         settings,
+        provider,
         stationName,
         routeLabels,
       ),
@@ -241,6 +291,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   List<Widget> _stationAndRoutes(
     Settings settings,
+    TransitProvider? provider,
     String? stationName,
     Map<String, String> routeLabels,
   ) {
@@ -248,6 +299,16 @@ class _DeviceScreenState extends State<DeviceScreen> {
       ListTile(
         title: Text(stationName ?? settings.stationId),
         subtitle: const Text('Station'),
+        trailing: provider == null ? null : const Icon(Icons.chevron_right),
+        onTap: provider == null
+            ? null
+            : () => _edit(
+                StationSearchScreen(
+                  provider: provider,
+                  link: widget.link,
+                  settings: settings,
+                ),
+              ),
       ),
       const _SectionHeader('Route Directions'),
       if (settings.routeDirectionIds.isEmpty)

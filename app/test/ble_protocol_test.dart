@@ -50,6 +50,28 @@ void main() {
     expect(settings.wifiSsid, 'office');
   });
 
+  test('encodes a settings write with the wifi password', () {
+    final settings = Settings.decode(readExample('valid/settings-write.json'));
+
+    expect(
+      jsonDecode(utf8.decode(settings.encode(wifiPassword: 'correct horse'))),
+      jsonDecode(utf8.decode(readExample('valid/settings-write.json'))),
+    );
+  });
+
+  test('encodes a settings write that keeps the stored password', () {
+    final settings = Settings.decode(
+      readExample('valid/settings-write-keep-password.json'),
+    );
+
+    expect(
+      jsonDecode(utf8.decode(settings.encode())),
+      jsonDecode(
+        utf8.decode(readExample('valid/settings-write-keep-password.json')),
+      ),
+    );
+  });
+
   test('rejects malformed JSON', () {
     expect(
       () => Settings.decode(readExample('invalid/malformed.json')),
@@ -108,6 +130,17 @@ void main() {
           '{"stationId": "de:09162:2", "routeDirectionIds": [], "platforms": [], "wifiSsid": "$ssid"}',
         ),
       ),
+      throwsFormatException,
+    );
+  });
+
+  test('refuses to encode a document over 512 bytes', () {
+    final settings = Settings.decode(readExample('valid/settings-read.json'));
+
+    expect(
+      () => settings
+          .copyWith(routeDirectionIds: List.filled(30, 'ddb:920S1: :H:j26'))
+          .encode(),
       throwsFormatException,
     );
   });

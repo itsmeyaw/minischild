@@ -16,13 +16,16 @@ class FakeDeviceLink implements DeviceLink {
   FakeDeviceLink({required this.info, required this.settings});
 
   final DeviceInfo info;
-  final Settings settings;
+  Settings settings;
   final _scans = <StreamController<List<FoundDevice>>>[];
   final _connectionLost = StreamController<void>.broadcast();
   int scanCount = 0;
   int connectCount = 0;
   int disconnectCount = 0;
   DeviceLinkException? connectError;
+  Completer<void>? connectGate;
+  final writes = <({Settings settings, String wifiPassword})>[];
+  DeviceLinkException? writeError;
 
   @override
   Stream<List<FoundDevice>> scan() {
@@ -40,12 +43,24 @@ class FakeDeviceLink implements DeviceLink {
   @override
   Future<DeviceInfo> connect(FoundDevice device) async {
     connectCount++;
+    await connectGate?.future;
     if (connectError case final error?) throw error;
     return info;
   }
 
   @override
   Future<Settings> readSettings() async => settings;
+
+  @override
+  Future<void> writeSettings(
+    Settings settings, {
+    String wifiPassword = '',
+  }) async {
+    settings.encode(wifiPassword: wifiPassword);
+    if (writeError case final error?) throw error;
+    writes.add((settings: settings, wifiPassword: wifiPassword));
+    this.settings = settings;
+  }
 
   @override
   Stream<void> get connectionLost => _connectionLost.stream;
@@ -65,12 +80,14 @@ class FakeTransitProvider implements TransitProvider {
 
   final List<Station> stationResults;
   final List<RouteDirection> routeResults;
-  final Object? error;
+  Object? error;
   int calls = 0;
+  final queries = <String>[];
 
   @override
   Future<List<Station>> searchStations(String query) async {
     calls++;
+    queries.add(query);
     if (error case final error?) throw error;
     return stationResults;
   }

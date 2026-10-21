@@ -110,6 +110,22 @@ class UniversalBleDeviceLink implements DeviceLink {
   }
 
   @override
+  Future<void> writeSettings(
+    Settings settings, {
+    String wifiPassword = '',
+  }) async {
+    final bytes = Uint8List.fromList(
+      settings.encode(wifiPassword: wifiPassword),
+    );
+    try {
+      await UniversalBle.write(_deviceId!, _serviceUuid, _settingsUuid, bytes);
+    } catch (error) {
+      debugPrint('Writing settings failed: $error');
+      throw const DeviceLinkException(DeviceLinkError.connectionFailed);
+    }
+  }
+
+  @override
   Stream<void> get connectionLost => _connectionLost.stream;
 
   @override
