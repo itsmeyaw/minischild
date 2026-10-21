@@ -39,7 +39,7 @@ class BoardController {
       view_.renderNoConnection(now, refresh);
     } else {
       DepartureBoard board{lastGood_->stopName, lastGood_->timestamp,
-                           selectDepartures(lastGood_->departures, now)};
+                           selectDepartures(lastGood_->departures, now, view_.rows())};
       view_.render(board, now, error ? std::optional<time_t>(lastGoodAt_) : std::nullopt, refresh);
     }
     return error ? std::optional<FetchError>(*error) : std::nullopt;

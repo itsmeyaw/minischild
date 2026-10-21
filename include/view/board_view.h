@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <ctime>
 #include <optional>
 
@@ -11,6 +12,9 @@ enum class Refresh { Partial, Full };
 class BoardView {
  public:
   virtual ~BoardView() = default;
+
+  // How many Departures the board shows.
+  virtual size_t rows() const = 0;
 
   // staleSince is set when board is not fresh: the time of the last successful fetch.
   virtual void render(const DepartureBoard& board, time_t now, std::optional<time_t> staleSince,
