@@ -6,7 +6,7 @@ A small always-on display that shows the upcoming public transport departures at
 
 </div>
 
-Minischild runs on an ESP32 and renders a live departure board on an e-paper display. It fetches realtime data from a transit provider (MVV out of the box), shapes it into a GTFS Realtime-like model, and lets any display implementation render it.
+Minischild runs on an ESP32 and renders a live departure board on an e-paper display. It fetches realtime data from a transit provider (MVV and BVG out of the box), shapes it into a GTFS Realtime-like model, and lets any display implementation render it.
 
 ## Requirements
 
@@ -48,6 +48,7 @@ The build environment picks the board; the view (display) and provider (data sou
 ```sh
 pio run -e esp32dev -t upload                # epaper_290 + mvv
 VIEW=epaper_42 pio run -e esp32dev -t upload # another view, same provider
+PROVIDER=bvg pio run -e esp32dev -t upload   # epaper_290 + bvg
 VIEW=epaper_42 PROVIDER=gtfs pio run -e esp32dev   # swap both
 ```
 
@@ -96,6 +97,6 @@ GLOSSARY.md                       domain language, shared by every folder
 - [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebase
 - [`docs/ble-protocol.md`](docs/ble-protocol.md) — the BLE contract between the Device and the Companion App
 - [`app/README.md`](app/README.md) — the Companion App: running, checks and sideloading
-- Each provider's `README.md` inside [`firmware/include/provider/`](firmware/include/provider)
+- Each provider's `README.md` inside [`firmware/include/provider/`](firmware/include/provider) (`mvv/`, `bvg/`, ...)
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — principles the code follows
 - [`docs/adr/`](docs/adr) — why the view/provider split and the GTFS-shaped model exist
