@@ -22,7 +22,7 @@ The phone does the Station, Route Direction and Platform lookup against the prov
 
 - The Device advertises as `Minischild-XXXX` over BLE at all times.
 - Pairing requires a 6-digit static passkey (`BLE_PASSKEY` from the Device's `config.h`) over an encrypted, authenticated link; up to 3 phones stay bonded.
-- Settings are read and written as JSON on the `settings` characteristic (`docs/ble-protocol.md`). A valid write is saved and the Device restarts.
+- Settings are read and written as JSON on the `settings` characteristic (`docs/ble-protocol.md`). A valid write is saved, and the Device restarts only if the WiFi changed.
 - The Device is typically within BLE range of the user's own phone, set up once and revisited when moving, changing commute, or changing WiFi.
 
 ## Capabilities and Constraints

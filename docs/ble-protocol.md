@@ -48,8 +48,8 @@ The Device's Board Selection and WiFi network.
 
 ### Write behaviour
 
-- **Valid write:** the Device saves the settings to non-volatile storage, then restarts about a second later. It drops the BLE link on restart, then shows the new Departure Board on the new network. Stored settings survive power loss and override `config.h`.
-- **Invalid write** (not JSON, over 512 bytes, a required field missing or of the wrong type, a string out of range): the Device keeps its settings and doesn't restart. The write itself still succeeds at the ATT level, so a client that needs to know reads `settings` back.
+- **Valid write:** the Device saves the settings to non-volatile storage. If `wifiSsid` or `wifiPassword` changed, it restarts about a second later, dropping the BLE link, then shows the new Departure Board on the new network. Otherwise it keeps the link and shows the new Board Selection within about a second, fetching right away. Stored settings survive power loss and override `config.h`.
+- **Invalid write** (not JSON, over 512 bytes, a required field missing or of the wrong type, a string out of range): the Device keeps its settings and doesn't apply or restart. The write itself still succeeds at the ATT level, so a client that needs to know reads `settings` back.
 
 ## Examples
 

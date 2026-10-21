@@ -55,7 +55,7 @@ A name is a folder under `firmware/src/view/` or `firmware/src/provider/`; a nam
 
 ### Changing settings over BLE
 
-The Device advertises as `Minischild-XXXX` at all times. Pair with a generic BLE tool such as nRF Connect, entering `BLE_PASSKEY` from `config.h`. Read and write the `settings` characteristic as JSON as described in [`docs/ble-protocol.md`](docs/ble-protocol.md). A valid write is saved and the Device restarts. The serial log prints the minimum free heap whenever it reaches a new low.
+The Device advertises as `Minischild-XXXX` at all times. Pair with a generic BLE tool such as nRF Connect, entering `BLE_PASSKEY` from `config.h`. Read and write the `settings` characteristic as JSON as described in [`docs/ble-protocol.md`](docs/ble-protocol.md). A valid write is saved; a WiFi change restarts the Device, any other change applies on the spot. The serial log prints the minimum free heap whenever it reaches a new low.
 
 ## Extending
 
