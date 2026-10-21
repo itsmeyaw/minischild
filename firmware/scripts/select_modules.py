@@ -1,9 +1,24 @@
-# Picks the view and provider folders under src/ to build. The VIEW and PROVIDER environment
-# variables override custom_view and custom_provider in platformio.ini.
+# Builds everything under src/ except the view and provider folders, plus the picked ones.
+# The VIEW and PROVIDER environment variables override custom_view and custom_provider in
+# platformio.ini. Also defines PROVIDER_NAME and FIRMWARE_VERSION for the BLE info characteristic.
 import os
+import subprocess
 import sys
 
 Import("env")
+
+
+def firmware_version(project_dir):
+    try:
+        return subprocess.check_output(
+            ["git", "describe", "--tags", "--always", "--dirty"],
+            cwd=project_dir,
+            stderr=subprocess.DEVNULL,
+            universal_newlines=True,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+
 
 src = env.subst("$PROJECT_SRC_DIR")
 selected = {}
@@ -18,10 +33,19 @@ for kind, variable in (("view", "VIEW"), ("provider", "PROVIDER")):
         env.Exit(1)
     selected[kind] = name
 
-print("Building view=%(view)s provider=%(provider)s" % selected)
+version = firmware_version(env.subst("$PROJECT_DIR"))
+print("Building view=%(view)s provider=%(provider)s firmware=%(version)s" % dict(selected, version=version))
+env.Append(
+    CPPDEFINES=[
+        ("PROVIDER_NAME", env.StringifyMacro(selected["provider"])),
+        ("FIRMWARE_VERSION", env.StringifyMacro(version)),
+    ]
+)
 env.Replace(
     SRC_FILTER=[
-        "+<main.cpp>",
+        "+<*>",
+        "-<view/>",
+        "-<provider/>",
         "+<view/%s/>" % selected["view"],
         "+<provider/%s/>" % selected["provider"],
     ]

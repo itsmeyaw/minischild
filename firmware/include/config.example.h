@@ -17,6 +17,11 @@ constexpr int8_t PIN_DIN = 23;
 constexpr const char* WIFI_SSID = "your-ssid";
 constexpr const char* WIFI_PASSWORD = "your-password";
 
+// 6-digit passkey a phone enters to pair with the Device over BLE (docs/ble-protocol.md).
+// BLE pairing allows digits only. Change it: anyone in range who knows it can reconfigure the
+// Device.
+constexpr uint32_t BLE_PASSKEY = 123456;
+
 // Station global ID and the Route Directions (MVV "stateless" IDs) to show. Find both via
 // https://www.mvv-muenchen.de/?eID=departuresFinder&action=available_lines&stop_id=de%3A09162%3A2
 // Leave ROUTE_DIRECTION_IDS empty ({}) to show all Routes at the Station.
