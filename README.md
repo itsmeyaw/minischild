@@ -20,7 +20,9 @@ Minischild runs on an ESP32 and renders a live departure board on an e-paper dis
 
 ## Setup
 
-1. Copy `include/config.example.h` to `include/config.h`, then fill in:
+The firmware is a PlatformIO project in `firmware/`; run every `pio` command below from there.
+
+1. Copy `firmware/include/config.example.h` to `firmware/include/config.h`, then fill in:
    - WiFi SSID and password
    - the Station ID and, optionally, the Route Direction IDs to show (leave the list empty to show every Route at the Station)
    - the e-paper pin wiring, if it differs from the default
@@ -38,7 +40,7 @@ Minischild runs on an ESP32 and renders a live departure board on an e-paper dis
 
 ### Picking the view and provider
 
-The build environment picks the board; the view (display) and provider (data source) are picked independently, defaulting to `custom_view` / `custom_provider` in `platformio.ini` (Waveshare 2.9" e-paper + MVV):
+The build environment picks the board; the view (display) and provider (data source) are picked independently, defaulting to `custom_view` / `custom_provider` in `firmware/platformio.ini` (Waveshare 2.9" e-paper + MVV):
 
 ```sh
 pio run -e esp32dev -t upload                # epaper_290 + mvv
@@ -46,12 +48,14 @@ VIEW=epaper_42 pio run -e esp32dev -t upload # another view, same provider
 VIEW=epaper_42 PROVIDER=gtfs pio run -e esp32dev   # swap both
 ```
 
-A name is a folder under `src/view/` or `src/provider/`; a name with no matching folder stops the build and lists the available ones. Put any settings the chosen view or provider needs in `config.h`.
+A name is a folder under `firmware/src/view/` or `firmware/src/provider/`; a name with no matching folder stops the build and lists the available ones. Put any settings the chosen view or provider needs in `config.h`.
 
 ## Extending
 
 > [!IMPORTANT]
 > Add new views and providers next to the existing ones; don't edit one that already works.
+
+Paths below are relative to `firmware/`.
 
 ### Add a display
 
@@ -69,16 +73,19 @@ A folder without its `setup.cpp` fails to link with `undefined reference to setu
 ## Project layout
 
 ```
-include/, src/         board, model, provider, util and view code
-src/view/<name>/       one BoardView implementation per supported display
-src/provider/<name>/   one DepartureProvider implementation per data source
-test/                  native Unity tests, one folder per unit under test
-docs/adr/              architecture decisions
+firmware/                         PlatformIO project for the Device
+firmware/include/, firmware/src/  board, model, provider, util and view code
+firmware/src/view/<name>/         one BoardView implementation per supported display
+firmware/src/provider/<name>/     one DepartureProvider implementation per data source
+firmware/test/                    native Unity tests, one folder per unit under test
+firmware/scripts/                 build scripts (view and provider selection)
+docs/adr/                         architecture decisions, shared by every folder
+GLOSSARY.md                       domain language, shared by every folder
 ```
 
 ## Further reading
 
-- [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebaseA
-- Each provider's `README.md` inside `include/providers/`
+- [`GLOSSARY.md`](GLOSSARY.md) — domain language used throughout the codebase
+- Each provider's `README.md` inside [`firmware/include/provider/`](firmware/include/provider)
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — principles the code follows
 - [`docs/adr/`](docs/adr) — why the view/provider split and the GTFS-shaped model exist
