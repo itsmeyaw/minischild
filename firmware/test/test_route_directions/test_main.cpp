@@ -75,11 +75,41 @@ void test_empty_lookup_result_is_cached_as_an_unknown_station() {
   TEST_ASSERT_TRUE(std::get<std::vector<std::string>>(second).empty());
 }
 
+void test_select_replaces_the_configured_route_directions() {
+  RouteDirections routeDirections(
+      {"ID1"}, [] { return RouteDirectionsResult{std::vector<std::string>{"LOOKED_UP"}}; });
+
+  routeDirections.select({"ID2", "ID3"});
+
+  RouteDirectionsResult result = routeDirections.get();
+  TEST_ASSERT_EQUAL(2, std::get<std::vector<std::string>>(result).size());
+  TEST_ASSERT_EQUAL_STRING("ID2", std::get<std::vector<std::string>>(result)[0].c_str());
+  TEST_ASSERT_EQUAL_STRING("ID3", std::get<std::vector<std::string>>(result)[1].c_str());
+}
+
+void test_select_empty_looks_up_again_instead_of_returning_the_old_cache() {
+  int lookups = 0;
+  RouteDirections routeDirections({}, [&] {
+    lookups++;
+    return RouteDirectionsResult{std::vector<std::string>{lookups == 1 ? "OLD" : "NEW"}};
+  });
+  TEST_ASSERT_EQUAL_STRING("OLD",
+                           std::get<std::vector<std::string>>(routeDirections.get())[0].c_str());
+
+  routeDirections.select({});
+
+  RouteDirectionsResult result = routeDirections.get();
+  TEST_ASSERT_EQUAL(2, lookups);
+  TEST_ASSERT_EQUAL_STRING("NEW", std::get<std::vector<std::string>>(result)[0].c_str());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_configured_route_directions_are_returned_without_lookup);
   RUN_TEST(test_empty_config_looks_up_once_and_reuses_the_result);
   RUN_TEST(test_failed_lookup_is_returned_and_retried_on_the_next_get);
   RUN_TEST(test_empty_lookup_result_is_cached_as_an_unknown_station);
+  RUN_TEST(test_select_replaces_the_configured_route_directions);
+  RUN_TEST(test_select_empty_looks_up_again_instead_of_returning_the_old_cache);
   return UNITY_END();
 }
