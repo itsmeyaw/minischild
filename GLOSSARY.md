@@ -35,6 +35,10 @@ The predicted time of a Departure minus its scheduled time; positive means late.
 The state of a Departure for which no realtime prediction exists, so only its scheduled time is known.
 _Avoid_: Unknown, offline
 
+**Canceled Departure**:
+A Departure that will not stop at the Station; its scheduled time is still known but it has no prediction and no Delay. The vehicle may still run the rest of its trip.
+_Avoid_: Skipped Departure, Entfällt, Halt entfällt
+
 **Departure Board**:
 The set of upcoming Departures at the Station at one moment, and the screen that shows them.
 _Avoid_: Schedule, timetable, widget

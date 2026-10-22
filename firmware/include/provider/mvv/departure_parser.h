@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 
 #include <cstdio>
+#include <cstring>
 #include <ctime>
 #include <string>
 
@@ -34,7 +35,10 @@ inline FetchResult toDepartureBoard(JsonObjectConst root, time_t now) {
     d.platformCode = dep["track"] | "";
     d.scheduledDepartureTime = mktime(&scheduled);
     d.scheduleRelationship = ScheduleRelationship::NoData;
-    if (sscanf(dep["departureLive"] | "", "%d:%d", &liveHour, &liveMinute) == 2) {
+    const char* liveText = dep["departureLive"] | "";
+    if (strstr(liveText, "entfällt")) {
+      d.scheduleRelationship = ScheduleRelationship::Skipped;
+    } else if (sscanf(liveText, "%d:%d", &liveHour, &liveMinute) == 2) {
       tm live = scheduled;
       live.tm_hour = liveHour;
       live.tm_min = liveMinute;
