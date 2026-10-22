@@ -18,6 +18,7 @@ constexpr int kRowHeight = 20;
 constexpr int kHeadsignX = 48;
 constexpr int kHeadsignWidth = 150;
 constexpr int kDelayRight = 228;
+constexpr int kStrikeOffset = 5;  // above the text baseline, about mid x-height
 constexpr int kMessageBaseline = kFirstRowBaseline + 2 * kRowHeight;
 
 std::string clockText(time_t t) {
@@ -108,6 +109,9 @@ void Epaper290BoardView::drawRow(int row, const Departure& departure, time_t now
   if (departure.departure && departure.departure->delay > 0) {
     const int32_t minutes = (departure.departure->delay + 59) / 60;
     drawRight(kDelayRight, baseline, "+" + std::to_string(minutes));
+  }
+  if (departure.scheduleRelationship == ScheduleRelationship::Skipped) {
+    display_.drawFastHLine(kMargin, baseline - kStrikeOffset, kWidth - 2 * kMargin, ink_);
   }
 }
 

@@ -89,6 +89,18 @@ void test_empty_live_time_is_no_data_without_event() {
   TEST_ASSERT_EQUAL(1792448280, d.scheduledDepartureTime);
 }
 
+void test_canceled_departure_is_skipped_without_event() {
+  DepartureBoard board = boardFrom(parseMvvDepartures(
+      R"J({"error":"","departures":[{"line":{"number":"28"},"direction":"Sendlinger Tor",)J"
+      R"J("station":{"name":"Karlsplatz (Stachus)"},"track":"Pos. 4","departureDate":"20261022",)J"
+      R"J("departurePlanned":"13:54","departureLive":"Halt entf\u00e4llt","inTime":false}]})J",
+      NOW));
+  const Departure& d = board.departures[0];
+  TEST_ASSERT_EQUAL(ScheduleRelationship::Skipped, d.scheduleRelationship);
+  TEST_ASSERT_FALSE(d.departure.has_value());
+  TEST_ASSERT_EQUAL(1792670040, d.scheduledDepartureTime);
+}
+
 void test_error_field_is_a_fetch_error() {
   FetchResult result =
       parseMvvDepartures(R"({"error":"Haltestelle unbekannt","departures":[]})", NOW);
@@ -117,6 +129,7 @@ int main() {
   RUN_TEST(test_delay_across_midnight_lands_on_next_day);
   RUN_TEST(test_early_departure_across_midnight_lands_on_previous_day);
   RUN_TEST(test_empty_live_time_is_no_data_without_event);
+  RUN_TEST(test_canceled_departure_is_skipped_without_event);
   RUN_TEST(test_error_field_is_a_fetch_error);
   RUN_TEST(test_malformed_json_is_a_fetch_error);
   RUN_TEST(test_no_departures_gives_an_empty_board);

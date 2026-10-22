@@ -8,7 +8,7 @@
 
 // GTFS Realtime-shaped model, see docs/adr/0002-gtfs-realtime-shaped-model.md.
 
-enum class ScheduleRelationship { Scheduled, NoData };
+enum class ScheduleRelationship { Scheduled, NoData, Skipped };
 
 struct StopTimeEvent {
   time_t time;
